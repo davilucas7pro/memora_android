@@ -1,8 +1,6 @@
 package com.memora.app;
 
 import android.app.AlarmManager;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -49,7 +47,8 @@ public class MainActivity extends AppCompatActivity {
                         .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH)
                         .setAutoCancel(true);
 
-                NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                android.app.NotificationManager nm = (android.app.NotificationManager)
+                    getSystemService(Context.NOTIFICATION_SERVICE);
                 nm.notify(notifId++, builder.build());
             }
 
