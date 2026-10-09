@@ -1057,6 +1057,7 @@ function saveTask(){
     tasks.unshift({...td,id:uid()})
   }
   S.set('mem_tasks',tasks); S.set('mem_lastn',lastN)
+  syncTasksToAndroid()
   close1('taskMod'); renderTasks(); renderCalDay()
   toast(editTaskId?'Tarefa atualizada!':'Tarefa criada! 🎯')
 }
@@ -1064,14 +1065,22 @@ function togTask(id){
   const t=tasks.find(x=>x.id===id); if(!t) return
   t.completed=!t.completed; t.completedAt=t.completed?Date.now():null
   if(t.completed){ delete lastN[id]; toast('✅ Tarefa concluída!') }
-  S.set('mem_tasks',tasks); S.set('mem_lastn',lastN); renderTasks()
+  S.set('mem_tasks',tasks); S.set('mem_lastn',lastN)
+  syncTasksToAndroid()
+  renderTasks()
 }
 function delTask(id){
   confirm2('Excluir esta tarefa?',()=>{
     tasks=tasks.filter(x=>x.id!==id); delete lastN[id]
     S.set('mem_tasks',tasks); S.set('mem_lastn',lastN)
+    syncTasksToAndroid()
     renderTasks(); renderCalDay(); toast('Tarefa removida')
   })
+}
+function syncTasksToAndroid(){
+  if(window.AndroidBridge&&AndroidBridge.saveTasks){
+    try{ AndroidBridge.saveTasks(JSON.stringify(tasks)) }catch(e){}
+  }
 }
 
 /* ── NOTE MODAL ── */
