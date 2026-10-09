@@ -1,16 +1,23 @@
 package com.memora.app;
 
+import android.app.AlarmManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
-import android.webkit.*;
+import android.webkit.JavascriptInterface;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.NotificationCompat;
 
 public class MainActivity extends AppCompatActivity {
+
     private static final String CHANNEL_ID = "memobuild_tasks";
+    private static final String PREFS_NAME = "MemoBuildPrefs";
     private int notifId = 1000;
 
     @Override
@@ -18,7 +25,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        createNotificationChannel();
+        NotificationReceiver.createChannel(this);
+        scheduleAlarm();
 
         WebView web = findViewById(R.id.webview);
         WebSettings s = web.getSettings();
@@ -28,31 +36,47 @@ public class MainActivity extends AppCompatActivity {
         s.setAllowUniversalAccessFromFileURLs(true);
 
         web.addJavascriptInterface(new Object() {
+
             @JavascriptInterface
             public void showNotification(String title, String body) {
-                NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, CHANNEL_ID)
-                    .setSmallIcon(android.R.drawable.ic_dialog_info)
-                    .setContentTitle(title)
-                    .setContentText(body)
-                    .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
-                    .setPriority(NotificationCompat.PRIORITY_HIGH)
-                    .setAutoCancel(true);
+                NotificationReceiver.createChannel(MainActivity.this);
+                androidx.core.app.NotificationCompat.Builder builder =
+                    new androidx.core.app.NotificationCompat.Builder(MainActivity.this, CHANNEL_ID)
+                        .setSmallIcon(android.R.drawable.ic_dialog_info)
+                        .setContentTitle(title)
+                        .setContentText(body)
+                        .setStyle(new androidx.core.app.NotificationCompat.BigTextStyle().bigText(body))
+                        .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH)
+                        .setAutoCancel(true);
 
                 NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 nm.notify(notifId++, builder.build());
             }
+
+            @JavascriptInterface
+            public void saveTasks(String tasksJson) {
+                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                prefs.edit().putString("tasks", tasksJson).apply();
+            }
+
         }, "AndroidBridge");
 
         web.loadUrl("file:///android_asset/index.html");
     }
 
-    private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                CHANNEL_ID, "Tarefas Pendentes", NotificationManager.IMPORTANCE_HIGH);
-            channel.setDescription("Lembretes de tarefas do Memo Build");
-            NotificationManager nm = getSystemService(NotificationManager.class);
-            nm.createNotificationChannel(channel);
+    private void scheduleAlarm() {
+        AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(this, NotificationReceiver.class);
+        PendingIntent pi = PendingIntent.getBroadcast(this, 0, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        long interval = 5 * 60 * 1000L;
+        long triggerAt = System.currentTimeMillis() + interval;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi);
+        } else {
+            am.setRepeating(AlarmManager.RTC_WAKEUP, triggerAt, interval, pi);
         }
     }
 }
