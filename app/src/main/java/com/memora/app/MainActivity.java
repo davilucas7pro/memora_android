@@ -1,48 +1,58 @@
 package com.memora.app;
 
-import android.app.Activity;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
-import android.view.View;
-import android.webkit.PermissionRequest;
-import android.webkit.WebChromeClient;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
+import android.webkit.*;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
 
-public class MainActivity extends Activity {
-    private WebView webView;
+public class MainActivity extends AppCompatActivity {
+    private static final String CHANNEL_ID = "memobuild_tasks";
+    private int notifId = 1000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        webView = new WebView(this);
-        setContentView(webView);
+        setContentView(R.layout.activity_main);
 
-        WebSettings s = webView.getSettings();
+        createNotificationChannel();
+
+        WebView web = findViewById(R.id.webview);
+        WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
-        s.setDatabaseEnabled(true);
-        s.setAllowFileAccess(true);
+        s.setAllowFileAccessFromFileURLs(true);
+        s.setAllowUniversalAccessFromFileURLs(true);
 
-        webView.setWebViewClient(new WebViewClient());
-        webView.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public void onPermissionRequest(PermissionRequest r) {
-                r.grant(r.getResources());
+        web.addJavascriptInterface(new Object() {
+            @JavascriptInterface
+            public void showNotification(String title, String body) {
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, CHANNEL_ID)
+                    .setSmallIcon(android.R.drawable.ic_dialog_info)
+                    .setContentTitle(title)
+                    .setContentText(body)
+                    .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setAutoCancel(true);
+
+                NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                nm.notify(notifId++, builder.build());
             }
-        });
+        }, "AndroidBridge");
 
-        webView.setSystemUiVisibility(
-            View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
-            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-        );
-
-        webView.loadUrl("file:///android_asset/index.html");
+        web.loadUrl("file:///android_asset/index.html");
     }
 
-    @Override
-    public void onBackPressed() {
-        if (webView.canGoBack()) webView.goBack();
-        else super.onBackPressed();
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                CHANNEL_ID, "Tarefas Pendentes", NotificationManager.IMPORTANCE_HIGH);
+            channel.setDescription("Lembretes de tarefas do Memo Build");
+            NotificationManager nm = getSystemService(NotificationManager.class);
+            nm.createNotificationChannel(channel);
+        }
     }
 }
