@@ -64,18 +64,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void scheduleAlarm() {
-        AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(this, NotificationReceiver.class);
-        PendingIntent pi = PendingIntent.getBroadcast(this, 0, intent,
-            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        try {
+            AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            Intent intent = new Intent(this, NotificationReceiver.class);
+            PendingIntent pi = PendingIntent.getBroadcast(this, 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        long interval = 5 * 60 * 1000L;
-        long triggerAt = System.currentTimeMillis() + interval;
+            long interval = 5 * 60 * 1000L;
+            long triggerAt = System.currentTimeMillis() + interval;
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi);
-        } else {
-            am.setRepeating(AlarmManager.RTC_WAKEUP, triggerAt, interval, pi);
+            // Usa alarme inexato — não precisa de permissão especial
+            am.setInexactRepeating(AlarmManager.RTC_WAKEUP, triggerAt, interval, pi);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
