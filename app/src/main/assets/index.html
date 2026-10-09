@@ -1,4 +1,4 @@
-<title>Memora</title>
+<title>Memo Build</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap">
 <style>
@@ -31,7 +31,7 @@
   --info-dim: rgba(96,165,250,.12);
   --r-sm: 6px; --r: 10px; --r-lg: 14px; --r-xl: 20px;
   --nav-h: 64px;
-  --head-h: 56px;
+  --head-h: 60px;
   color-scheme: dark;
 }
 @media (prefers-color-scheme: light) {
@@ -80,7 +80,7 @@ body {
 .hdr {
   display: flex; align-items: center;
   justify-content: space-between;
-  padding: 0 16px; height: var(--head-h);
+  padding: 0 14px; height: var(--head-h);
   background: var(--bg);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
@@ -90,11 +90,19 @@ body {
 }
 .logo {
   font-family: 'Outfit', sans-serif;
-  font-size: 20px; font-weight: 800;
+  font-size: 18px; font-weight: 800;
   color: var(--accent); letter-spacing: -.5px;
-  display: flex; align-items: center; gap: 7px;
+  display: flex; align-items: center; gap: 8px;
+  flex-shrink: 0;
 }
-.logo em { color: var(--text); font-style: normal; font-weight: 600 }
+.logo-mark {
+  width: 34px; height: 34px; border-radius: 9px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; box-shadow: 0 2px 8px rgba(232,146,12,.35);
+}
+.logo-mark svg { width: 18px; height: 18px; color: #fff }
+.logo em { color: var(--text); font-style: normal; font-weight: 500; font-size: 16px }
 .hdr-btns { display: flex; gap: 6px }
 .icn-btn {
   width: 36px; height: 36px; border-radius: var(--r);
@@ -150,28 +158,30 @@ body {
 .sec-head {
   display: flex; align-items: center;
   justify-content: space-between;
-  padding: 20px 16px 10px;
+  padding: 14px 16px 10px;
   flex-shrink: 0;
+  flex-wrap: wrap; gap: 8px;
 }
 .sec-title {
   font-family: 'Outfit', sans-serif;
-  font-size: 24px; font-weight: 800;
+  font-size: 22px; font-weight: 800;
   color: var(--text); letter-spacing: -.4px;
 }
 
 /* ── BUTTONS ── */
 .add-btn {
-  display: flex; align-items: center; gap: 5px;
-  padding: 8px 14px;
+  display: flex; align-items: center; gap: 4px;
+  padding: 7px 12px;
   background: var(--accent); color: #fff;
   border: none; border-radius: var(--r);
-  font-size: 14px; font-weight: 600;
+  font-size: 13px; font-weight: 600;
   font-family: 'DM Sans', sans-serif;
   cursor: pointer; transition: all .15s;
+  white-space: nowrap; flex-shrink: 0;
 }
 .add-btn:hover { background: var(--accent-2) }
 .add-btn:active { transform: scale(.96) }
-.add-btn svg { width: 15px; height: 15px }
+.add-btn svg { width: 14px; height: 14px }
 
 /* ── FILTERS ── */
 .filters {
@@ -550,8 +560,10 @@ body {
   <!-- Header -->
   <header class="hdr">
     <div class="logo">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-      Memo<em>ra</em>
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      </div>
+      Memo <em>Build</em>
     </div>
     <div class="hdr-btns">
       <button class="icn-btn" id="notifBtn" title="Notificações" style="position:relative" onclick="reqNotif()">
@@ -1114,6 +1126,14 @@ document.getElementById('confOk').onclick=function(){
 
 /* ── NOTIFICATIONS ── */
 async function reqNotif(){
+  if(window.AndroidBridge){
+    S.set('mem_notif_asked',true)
+    document.getElementById('notifHint').style.display='none'
+    document.getElementById('notifBtn').classList.add('lit')
+    checkNotifs()
+    toast('🔔 Notificações ativadas! Você será lembrado a cada 5 minutos.')
+    return
+  }
   if(!('Notification' in window)){ toast('Navegador sem suporte a notificações'); return }
   const p=await Notification.requestPermission()
   S.set('mem_notif_asked',true)
@@ -1121,6 +1141,7 @@ async function reqNotif(){
   if(p==='granted'){
     document.getElementById('notifHint').style.display='none'
     document.getElementById('notifBtn').classList.add('lit')
+    checkNotifs()
     toast('🔔 Notificações ativadas! Você será lembrado a cada 5 minutos enquanto houver tarefas pendentes.')
   } else {
     toast('Notificações bloqueadas. Ative nas configurações do navegador para receber lembretes.')
@@ -1130,6 +1151,14 @@ function updateNotifUI(){
   const asked=S.get('mem_notif_asked',false)
   const hint=document.getElementById('notifHint')
   const btn=document.getElementById('notifBtn')
+  if(window.AndroidBridge){
+    hint.style.display='none'; btn.classList.add('lit')
+    const hasDue=tasks.some(t=>!t.completed&&t.dueDate&&t.dueDate<=todayStr())
+    const existing=btn.querySelector('.notif-dot')
+    if(hasDue&&!existing) btn.insertAdjacentHTML('beforeend','<div class="notif-dot"></div>')
+    else if(!hasDue&&existing) existing.remove()
+    return
+  }
   if(typeof Notification!=='undefined'){
     if(Notification.permission==='granted'){
       hint.style.display='none'; btn.classList.add('lit')
@@ -1143,8 +1172,21 @@ function updateNotifUI(){
     }
   }
 }
+function sendNotif(title, body){
+  // Native Android bridge (WebView APK)
+  if(window.AndroidBridge){
+    try{ AndroidBridge.showNotification(title, body) }catch(e){}
+    return
+  }
+  // Web browser fallback
+  if(typeof Notification!=='undefined'&&Notification.permission==='granted'){
+    try{ new Notification(title,{body,tag:title}) }catch(e){}
+  }
+}
 function checkNotifs(){
-  if(typeof Notification==='undefined'||Notification.permission!=='granted') return
+  const hasAndroid=!!window.AndroidBridge
+  const hasWeb=typeof Notification!=='undefined'&&Notification.permission==='granted'
+  if(!hasAndroid&&!hasWeb) return
   const today=todayStr(), now=nowTime()
   const GAP=5*60*1000
   tasks.forEach(t=>{
@@ -1155,12 +1197,8 @@ function checkNotifs(){
       const last=lastN[t.id]||0
       if(Date.now()-last>=GAP){
         const ov=t.dueDate<today
-        try{
-          new Notification('⏰ Memora — '+(ov?'Tarefa Atrasada':'Tarefa Pendente'),{
-            body:t.title+(t.description?'\n'+t.description:''),
-            tag:t.id
-          })
-        }catch(e){}
+        sendNotif('⏰ Memo Build — '+(ov?'Tarefa Atrasada':'Tarefa Pendente'),
+          t.title+(t.description?'\n'+t.description:''))
         lastN[t.id]=Date.now()
         S.set('mem_lastn',lastN)
       }
@@ -1193,10 +1231,10 @@ if(S.get('mem_notif_asked',false)&&typeof Notification!=='undefined'&&Notificati
   document.getElementById('notifBtn').classList.add('lit')
 }
 
-// Notification check every 60s, re-render every 60s
-setInterval(()=>{
-  checkNotifs()
-  renderTasks()
-  updateNotifUI()
-}, 60000)
+// Check notifications every 30s
+setInterval(()=>{ checkNotifs(); renderTasks(); updateNotifUI() }, 30000)
+// Also check when user returns to the tab/app
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'){ checkNotifs(); updateNotifUI() }
+})
 </script>
