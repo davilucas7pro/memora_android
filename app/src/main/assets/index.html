@@ -1456,15 +1456,31 @@ function subscribeContact(contact){
   if(!fbDb) return
   if(reqListeners[contact.token]) return // already subscribed
   const ref = fbDb.ref('requests/'+contact.token)
+  let firstLoad = true
   reqListeners[contact.token] = ref
   ref.on('value', snap=>{
     const val = snap.val() || {}
+    const prev = allRequests[contact.token] || {}
     allRequests[contact.token] = val
     updateLinksBadge()
     // If links tab visible, re-render
     if(document.getElementById('tab-links').classList.contains('on')){
       renderContacts()
     }
+    // Notify on new requests (skip first load to avoid spam on open)
+    if(!firstLoad && window.AndroidBridge){
+      Object.entries(val).forEach(([id, r])=>{
+        if(!prev[id] && r.status === 'nova'){
+          try {
+            AndroidBridge.showNotification(
+              '📋 Nova solicitação — ' + contact.name,
+              r.title + (r.description ? '\n' + r.description : '')
+            )
+          } catch(e){}
+        }
+      })
+    }
+    firstLoad = false
   })
 }
 
