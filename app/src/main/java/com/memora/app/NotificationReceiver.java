@@ -8,15 +8,14 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import androidx.core.app.NotificationCompat;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
-
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
 public class NotificationReceiver extends BroadcastReceiver {
+
     private static final String CHANNEL_ID = "memobuild_tasks";
     private static final String PREFS_NAME = "MemoBuildPrefs";
 
@@ -29,54 +28,69 @@ public class NotificationReceiver extends BroadcastReceiver {
     private void checkAndNotify(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         String tasksJson = prefs.getString("tasks", "[]");
-        String lastNJson  = prefs.getString("lastN", "{}");
+        String lastNJson = prefs.getString("lastN", "{}");
+        String settingsJson = prefs.getString("settings", "{\"alta\":2,\"media\":5,\"baixa\":10}");
 
         String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
         String nowTime = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
-        long GAP = 5 * 60 * 1000L;
         long now = System.currentTimeMillis();
 
         try {
             JSONArray tasks = new JSONArray(tasksJson);
             JSONObject lastN = new JSONObject(lastNJson);
+            JSONObject settings = new JSONObject(settingsJson);
 
-            NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            long gapAlta  = settings.optLong("alta",  2)  * 60 * 1000L;
+            long gapMedia = settings.optLong("media", 5)  * 60 * 1000L;
+            long gapBaixa = settings.optLong("baixa", 10) * 60 * 1000L;
+
+            NotificationManager nm = (NotificationManager)
+                context.getSystemService(Context.NOTIFICATION_SERVICE);
             int notifId = (int)(now / 1000);
 
             for (int i = 0; i < tasks.length(); i++) {
                 JSONObject t = tasks.getJSONObject(i);
                 if (t.optBoolean("completed", false)) continue;
+
                 String dueDate = t.optString("dueDate", "");
                 if (dueDate.isEmpty()) continue;
 
-                boolean due = dueDate.compareTo(today) <= 0;
+                boolean dateOk = dueDate.compareTo(today) <= 0;
                 String dueTime = t.optString("dueTime", "");
                 boolean timeOk = dueTime.isEmpty()
                     || dueDate.compareTo(today) < 0
                     || (dueDate.equals(today) && dueTime.compareTo(nowTime) <= 0);
 
-                if (!due || !timeOk) continue;
+                if (!dateOk || !timeOk) continue;
+
+                String priority = t.optString("priority", "media").toLowerCase();
+                long gap = priority.equals("alta") ? gapAlta :
+                           priority.equals("baixa") ? gapBaixa : gapMedia;
 
                 String id = t.optString("id", "");
                 long last = lastN.optLong(id, 0);
-                if (now - last < GAP) continue;
+                if (now - last < gap) continue;
 
                 boolean overdue = dueDate.compareTo(today) < 0;
                 String title = "⏰ Memo Build — " + (overdue ? "Tarefa Atrasada" : "Tarefa Pendente");
-                String body  = t.optString("title", "");
-                String desc  = t.optString("description", "");
+                String body = t.optString("title", "");
+                String desc = t.optString("description", "");
                 if (!desc.isEmpty()) body += "\n" + desc;
 
-                NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
-                    .setSmallIcon(android.R.drawable.ic_dialog_info)
-                    .setContentTitle(title)
-                    .setContentText(body)
-                    .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
-                    .setPriority(NotificationCompat.PRIORITY_HIGH)
-                    .setAutoCancel(true);
+                String prioLabel = priority.equals("alta") ? "🔴 Alta" :
+                                   priority.equals("baixa") ? "🟢 Baixa" : "🟡 Média";
+                body += "\nPrioridade: " + prioLabel;
+
+                NotificationCompat.Builder builder =
+                    new NotificationCompat.Builder(context, CHANNEL_ID)
+                        .setSmallIcon(android.R.drawable.ic_dialog_info)
+                        .setContentTitle(title)
+                        .setContentText(body)
+                        .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
+                        .setAutoCancel(true);
 
                 nm.notify(notifId++, builder.build());
-
                 lastN.put(id, now);
             }
 
