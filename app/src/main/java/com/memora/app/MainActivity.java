@@ -58,6 +58,12 @@ public class MainActivity extends AppCompatActivity {
                 prefs.edit().putString("tasks", tasksJson).apply();
             }
 
+            @JavascriptInterface
+            public void saveSettings(String settingsJson) {
+                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                prefs.edit().putString("settings", settingsJson).apply();
+            }
+
         }, "AndroidBridge");
 
         web.loadUrl("file:///android_asset/index.html");
@@ -70,10 +76,9 @@ public class MainActivity extends AppCompatActivity {
             PendingIntent pi = PendingIntent.getBroadcast(this, 0, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-            long interval = 5 * 60 * 1000L;
+            long interval = 2 * 60 * 1000L;
             long triggerAt = System.currentTimeMillis() + interval;
 
-            // Usa alarme inexato — não precisa de permissão especial
             am.setInexactRepeating(AlarmManager.RTC_WAKEUP, triggerAt, interval, pi);
         } catch (Exception e) {
             e.printStackTrace();
