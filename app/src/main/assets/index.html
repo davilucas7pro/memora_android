@@ -28,6 +28,8 @@
   --warn-dim: rgba(251,191,36,.13);
   --info: #60a5fa;
   --info-dim: rgba(96,165,250,.12);
+  --purple: #c084fc;
+  --purple-dim: rgba(192,132,252,.14);
   --r-sm: 6px; --r: 10px; --r-lg: 14px; --r-xl: 20px;
   --nav-h: 64px;
   --head-h: 60px;
@@ -44,7 +46,9 @@
     --success-dim: rgba(22,163,74,.12); --danger: #dc2626;
     --danger-dim: rgba(220,38,38,.1); --warn: #d97706;
     --warn-dim: rgba(217,119,6,.1); --info: #2563eb;
-    --info-dim: rgba(37,99,235,.1); color-scheme: light;
+    --info-dim: rgba(37,99,235,.1);
+    --purple: #9333ea; --purple-dim: rgba(147,51,234,.12);
+    color-scheme: light;
   }
 }
 :root[data-theme="light"] {
@@ -57,7 +61,9 @@
   --success-dim: rgba(22,163,74,.12); --danger: #dc2626;
   --danger-dim: rgba(220,38,38,.1); --warn: #d97706;
   --warn-dim: rgba(217,119,6,.1); --info: #2563eb;
-  --info-dim: rgba(37,99,235,.1); color-scheme: light;
+  --info-dim: rgba(37,99,235,.1);
+  --purple: #9333ea; --purple-dim: rgba(147,51,234,.12);
+  color-scheme: light;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
@@ -151,6 +157,13 @@ body {
 .nav-pip {
   width: 4px; height: 4px; border-radius: 50%;
   background: var(--accent); margin-top: -2px;
+}
+.nav-badge {
+  min-width: 16px; height: 16px; border-radius: 8px;
+  background: var(--danger); color: #fff;
+  font-size: 10px; font-weight: 700;
+  display: none; align-items: center; justify-content: center;
+  padding: 0 4px; margin-top: -2px;
 }
 
 /* ── SECTION HEADER ── */
@@ -572,6 +585,95 @@ body {
   transition: border-color .15s;
 }
 .cfg-input:focus { border-color: var(--accent) }
+
+/* ── LINKS TAB ── */
+.contact-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 13px 14px;
+  margin-bottom: 8px;
+}
+.contact-top {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+}
+.contact-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--accent-dim-2); border: 1px solid var(--accent-dim);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Outfit', sans-serif; font-weight: 800;
+  font-size: 15px; color: var(--accent); flex-shrink: 0;
+}
+.contact-info { flex: 1; min-width: 0 }
+.contact-name { font-weight: 600; font-size: 15px; color: var(--text) }
+.contact-meta { font-size: 12px; color: var(--text-muted); margin-top: 1px }
+.contact-btns { display: flex; gap: 6px }
+.contact-link-row {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 8px 10px;
+}
+.contact-link-text {
+  flex: 1; min-width: 0;
+  font-size: 12px; color: var(--text-muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-family: monospace;
+}
+.copy-btn {
+  display: flex; align-items: center; gap: 4px;
+  padding: 5px 9px; border: 1px solid var(--border);
+  border-radius: var(--r-sm); background: var(--surface-3);
+  color: var(--text-2); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all .15s; flex-shrink: 0;
+  font-family: 'DM Sans', sans-serif;
+}
+.copy-btn:hover { border-color: var(--accent); color: var(--accent) }
+.copy-btn:active { transform: scale(.95) }
+
+/* Request cards in Links tab */
+.req-section { margin: 0 16px 20px }
+.req-section-title {
+  font-size: 12px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text-muted);
+  margin-bottom: 8px; padding-top: 4px;
+}
+.req-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 12px 14px; margin-bottom: 7px;
+  cursor: pointer; transition: border-color .15s;
+}
+.req-card:hover { border-color: var(--border-2) }
+.req-card.nova    { border-left: 3px solid var(--purple) }
+.req-card.pendente { border-left: 3px solid var(--info) }
+.req-card.atrasada { border-left: 3px solid var(--danger) }
+.req-card.concluida { border-left: 3px solid var(--success); opacity: .7 }
+.req-top { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 4px }
+.req-title { flex: 1; font-size: 14px; font-weight: 600; color: var(--text); min-width: 0 }
+.pill {
+  font-size: 10px; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; padding: 2px 7px; border-radius: 20px; flex-shrink: 0;
+}
+.pill-nova    { background: var(--purple-dim); color: var(--purple) }
+.pill-pendente { background: var(--info-dim);   color: var(--info)   }
+.pill-atrasada { background: var(--danger-dim); color: var(--danger) }
+.pill-concluida { background: var(--success-dim); color: var(--success) }
+.req-desc { font-size: 12px; color: var(--text-2); margin-bottom: 6px; line-height: 1.5 }
+.req-meta-row { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; font-size: 12px; color: var(--text-muted) }
+.req-chip {
+  display: inline-flex; align-items: center; gap: 3px;
+  background: var(--surface-2); padding: 2px 7px;
+  border-radius: 20px; border: 1px solid var(--border);
+}
+.req-chip.high { background: var(--danger-dim); color: var(--danger); border-color: transparent }
+.req-chip.med  { background: var(--warn-dim);   color: var(--warn);   border-color: transparent }
+.req-chip.low  { background: var(--info-dim);   color: var(--info);   border-color: transparent }
+.contact-name-tag {
+  font-size: 11px; font-weight: 600; padding: 2px 7px;
+  border-radius: 20px; background: var(--accent-dim); color: var(--accent-2);
+}
+.firebase-offline {
+  margin: 0 16px 10px; padding: 9px 12px; border-radius: var(--r);
+  background: var(--danger-dim); border: 1px solid var(--danger);
+  color: var(--danger); font-size: 12px; display: none;
+}
 </style>
 
 <div id="app">
@@ -676,6 +778,30 @@ body {
       </div>
     </div>
 
+    <!-- LINKS TAB -->
+    <div class="tab" id="tab-links">
+      <div class="sec-head">
+        <h1 class="sec-title">Links</h1>
+        <button class="add-btn" onclick="openContactModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Novo contato
+        </button>
+      </div>
+
+      <div id="fbOfflineBar" class="firebase-offline">
+        ⚠️ Sem conexão com o servidor. Verifique sua internet.
+      </div>
+
+      <!-- Contacts list -->
+      <div id="contactList" class="list"></div>
+
+      <!-- All requests section -->
+      <div id="allReqSection" class="req-section" style="margin-top:12px">
+        <div class="req-section-title">Solicitações recebidas</div>
+        <div id="allReqList"></div>
+      </div>
+    </div>
+
   </main>
 
   <!-- Bottom Nav -->
@@ -692,6 +818,11 @@ body {
     <button class="nav-it" onclick="goTab('cal',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       <span class="nav-label">Calendário</span>
+    </button>
+    <button class="nav-it" onclick="goTab('links',this)" id="linksNav">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      <span class="nav-label">Links</span>
+      <div class="nav-badge" id="linksBadge">0</div>
     </button>
   </nav>
 
@@ -791,6 +922,34 @@ body {
     </div>
   </div>
 
+  <!-- Add Contact Modal -->
+  <div class="overlay" id="contactMod" onclick="closeBg(event,'contactMod')">
+    <div class="modal">
+      <div class="m-handle"></div>
+      <div class="m-title">👤 Novo Contato</div>
+      <div class="fg">
+        <label class="fl">Nome do contato *</label>
+        <input class="fi" id="cName" placeholder="Ex: João Silva" maxlength="60">
+      </div>
+      <p style="font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:6px">
+        Um link único será gerado para este contato. Ele poderá enviar solicitações e acompanhar o status de cada uma.
+      </p>
+      <div class="m-actions">
+        <button class="btn-cancel" onclick="close1('contactMod')">Cancelar</button>
+        <button class="btn-save" onclick="saveContact()">Gerar link</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Review Request Modal -->
+  <div class="overlay" id="reqMod" onclick="closeBg(event,'reqMod')">
+    <div class="modal">
+      <div class="m-handle"></div>
+      <div class="m-title">📋 Solicitação</div>
+      <div id="reqModContent"><!-- filled dynamically --></div>
+    </div>
+  </div>
+
   <!-- Confirm Dialog -->
   <div class="overlay" id="confMod">
     <div class="confirm-dlg">
@@ -803,7 +962,34 @@ body {
   </div>
 </div>
 
+<!-- Firebase -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.1/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.1/firebase-database-compat.min.js"></script>
+
 <script>
+/* ── FIREBASE ── */
+const firebaseConfig = {
+  apiKey: "AIzaSyArRSR87rQzOM5qQCVMA5RUdhumCY71P6c",
+  authDomain: "memo-build.firebaseapp.com",
+  databaseURL: "https://memo-build-default-rtdb.firebaseio.com",
+  projectId: "memo-build",
+  storageBucket: "memo-build.firebasestorage.app",
+  messagingSenderId: "970496536577",
+  appId: "1:970496536577:web:8d7266fb3cb6d0a34c5000"
+};
+let fbApp, fbDb;
+try {
+  fbApp = firebase.initializeApp(firebaseConfig);
+  fbDb = firebase.database();
+  fbDb.ref('.info/connected').on('value', snap => {
+    document.getElementById('fbOfflineBar').style.display = snap.val() ? 'none' : 'block';
+  });
+} catch(e) {
+  console.warn('Firebase init failed:', e);
+}
+
+const BASE_URL = 'https://davilucas7pro.github.io/memora_android/';
+
 /* ── STORAGE ── */
 const S = {
   get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},
@@ -814,6 +1000,7 @@ const S = {
 let tasks    = S.get('mem_tasks',[])
 let notes    = S.get('mem_notes',[])
 let lastN    = S.get('mem_lastn',{})
+let contacts = S.get('mem_contacts',[])
 let filter   = 'all'
 let curPrio  = 'med'
 let editTaskId = null
@@ -824,16 +1011,29 @@ let theme    = S.get('mem_theme','auto')
 let confCb   = null
 let notifCfg = S.get('mem_notif_cfg', {alta:2, media:5, baixa:10})
 
+// All requests from Firebase: { [token]: { [reqId]: reqObj } }
+let allRequests = {}
+let reqListeners = {} // token -> firebase listener ref
+let curReviewToken = null
+let curReviewId    = null
+let curReviewPrio  = null
+
 /* ── HELPERS ── */
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6) }
+function genToken(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,10)+Math.random().toString(36).slice(2,8) }
 function todayStr(){ return new Date().toISOString().slice(0,10) }
 function nowTime(){ return new Date().toTimeString().slice(0,5) }
-function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
 
 function fmtDate(d){
   if(!d) return ''
   const dt = new Date(d+'T00:00:00')
   return dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})
+}
+function fmtDateFull(d){
+  if(!d) return ''
+  const [y,m,dd] = d.split('-')
+  return dd+'/'+m+'/'+y
 }
 function relDate(d){
   if(!d) return ''
@@ -870,6 +1070,7 @@ function goTab(id,btn){
   document.getElementById('tab-'+id).classList.add('on')
   btn.classList.add('on')
   if(id==='cal') renderCal()
+  if(id==='links') renderContacts()
 }
 function setF(f,btn){
   filter=f
@@ -1199,6 +1400,276 @@ function saveNotifSettings(){
   toast('✅ Configurações salvas!')
 }
 
+/* ── CONTACTS / LINKS ── */
+function openContactModal(){
+  document.getElementById('cName').value=''
+  open1('contactMod')
+  setTimeout(()=>document.getElementById('cName').focus(),220)
+}
+function saveContact(){
+  const name = document.getElementById('cName').value.trim()
+  if(!name){ toast('Digite o nome do contato'); return }
+  const token = genToken()
+  const contact = { id: uid(), name, token, createdAt: Date.now() }
+  contacts.unshift(contact)
+  S.set('mem_contacts', contacts)
+  close1('contactMod')
+  subscribeContact(contact)
+  renderContacts()
+  toast('✅ Link gerado para ' + name + '!')
+}
+function delContact(id){
+  const c = contacts.find(x=>x.id===id); if(!c) return
+  confirm2('Excluir contato "'+c.name+'" e todos os seus dados?', ()=>{
+    // Remove firebase listener
+    if(reqListeners[c.token]){
+      try{ reqListeners[c.token].off() }catch(e){}
+      delete reqListeners[c.token]
+    }
+    // Remove data from firebase
+    if(fbDb) fbDb.ref('requests/'+c.token).remove().catch(()=>{})
+    delete allRequests[c.token]
+    contacts = contacts.filter(x=>x.id!==id)
+    S.set('mem_contacts', contacts)
+    renderContacts()
+    toast('Contato removido')
+  })
+}
+function copyLink(token){
+  const url = BASE_URL + '?token=' + token
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(url).then(()=>toast('🔗 Link copiado!')).catch(()=>fallbackCopy(url))
+  } else { fallbackCopy(url) }
+}
+function fallbackCopy(text){
+  const ta = document.createElement('textarea')
+  ta.value = text
+  ta.style.cssText='position:fixed;opacity:0'
+  document.body.appendChild(ta)
+  ta.select()
+  try{ document.execCommand('copy'); toast('🔗 Link copiado!') }
+  catch(e){ toast('Não foi possível copiar') }
+  ta.remove()
+}
+
+function subscribeContact(contact){
+  if(!fbDb) return
+  if(reqListeners[contact.token]) return // already subscribed
+  const ref = fbDb.ref('requests/'+contact.token)
+  reqListeners[contact.token] = ref
+  ref.on('value', snap=>{
+    const val = snap.val() || {}
+    allRequests[contact.token] = val
+    updateLinksBadge()
+    // If links tab visible, re-render
+    if(document.getElementById('tab-links').classList.contains('on')){
+      renderContacts()
+    }
+  })
+}
+
+function subscribeAllContacts(){
+  contacts.forEach(c => subscribeContact(c))
+}
+
+function updateLinksBadge(){
+  let newCount = 0
+  contacts.forEach(c=>{
+    const reqs = allRequests[c.token] || {}
+    Object.values(reqs).forEach(r=>{ if(r.status==='nova') newCount++ })
+  })
+  const badge = document.getElementById('linksBadge')
+  if(newCount > 0){
+    badge.style.display = 'flex'
+    badge.textContent = newCount > 99 ? '99+' : newCount
+  } else {
+    badge.style.display = 'none'
+  }
+}
+
+function renderContacts(){
+  const el = document.getElementById('contactList')
+  if(!contacts.length){
+    el.innerHTML=`<div class="empty"><div class="empty-ico">🔗</div><div class="empty-t">Nenhum contato ainda</div><p class="empty-s">Toque em "Novo contato" para gerar um link exclusivo e compartilhar</p></div>`
+    document.getElementById('allReqSection').style.display='none'
+    return
+  }
+  el.innerHTML = contacts.map(c=>{
+    const reqs = allRequests[c.token] || {}
+    const total = Object.keys(reqs).length
+    const novas = Object.values(reqs).filter(r=>r.status==='nova').length
+    const url = BASE_URL + '?token=' + c.token
+    const initials = c.name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase()
+    return `<div class="contact-card">
+      <div class="contact-top">
+        <div class="contact-avatar">${esc(initials)}</div>
+        <div class="contact-info">
+          <div class="contact-name">${esc(c.name)}</div>
+          <div class="contact-meta">${total} solicitaç${total===1?'ão':'ões'}${novas>0?' · <strong style="color:var(--purple)">'+novas+' nova'+(novas>1?'s':'')+'</strong>':''}</div>
+        </div>
+        <div class="contact-btns">
+          <button class="task-del" onclick="delContact('${c.id}')" title="Excluir contato" style="color:var(--text-muted)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="contact-link-row">
+        <div class="contact-link-text">${esc(url)}</div>
+        <button class="copy-btn" onclick="copyLink('${c.token}')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copiar
+        </button>
+      </div>
+    </div>`
+  }).join('')
+
+  renderAllRequests()
+}
+
+function renderAllRequests(){
+  // Flatten all requests across contacts, sorted by createdAt desc
+  let allList = []
+  contacts.forEach(c=>{
+    const reqs = allRequests[c.token] || {}
+    Object.entries(reqs).forEach(([id,r])=>{
+      allList.push({ ...r, id, token: c.token, contactName: c.name })
+    })
+  })
+  allList.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0))
+
+  const section = document.getElementById('allReqSection')
+  const el = document.getElementById('allReqList')
+
+  if(!allList.length){
+    section.style.display = 'none'
+    return
+  }
+  section.style.display = 'block'
+
+  const statusLabel = s => ({nova:'Nova',pendente:'Pendente',atrasada:'Atrasada',concluida:'Concluída'}[s]||s)
+  const prioLabel = p => ({high:'🔴 Alta',med:'🟡 Média',low:'🔵 Baixa'}[p]||'')
+
+  el.innerHTML = allList.map(r=>`
+    <div class="req-card ${r.status}" onclick="openReqModal('${r.token}','${r.id}')">
+      <div class="req-top">
+        <div class="req-title">${esc(r.title)}</div>
+        <span class="pill pill-${r.status}">${statusLabel(r.status)}</span>
+      </div>
+      ${r.description?`<div class="req-desc">${esc(r.description)}</div>`:''}
+      <div class="req-meta-row">
+        <span class="contact-name-tag">${esc(r.contactName)}</span>
+        ${r.priority?`<span class="req-chip ${r.priority}">${prioLabel(r.priority)}</span>`:''}
+        ${r.dueDate?`<span class="req-chip">📅 ${fmtDateFull(r.dueDate)}</span>`:''}
+      </div>
+    </div>`).join('')
+}
+
+/* ── REQUEST REVIEW MODAL ── */
+function openReqModal(token, reqId){
+  curReviewToken = token
+  curReviewId = reqId
+  const reqs = allRequests[token] || {}
+  const r = reqs[reqId]; if(!r) return
+  curReviewPrio = r.priority || null
+
+  const contact = contacts.find(c=>c.token===token)
+  const contactName = contact ? contact.name : 'Contato'
+  const statusLabel = s => ({nova:'Nova',pendente:'Pendente',atrasada:'Atrasada',concluida:'Concluída'}[s]||s)
+  const isOverdue = r.dueDate && r.dueDate < todayStr()
+
+  document.getElementById('reqModContent').innerHTML = `
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">De: ${esc(contactName)}</div>
+      <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:${r.description?'8px':'0'}">${esc(r.title)}</div>
+      ${r.description?`<div style="font-size:14px;color:var(--text-2);line-height:1.6">${esc(r.description)}</div>`:''}
+    </div>
+
+    <div class="fg">
+      <label class="fl">Prioridade</label>
+      <div class="prio-row" id="reqPrioRow">
+        <button class="prio-b high${curReviewPrio==='high'?' on':''}" onclick="setReqPrio('high',this)">🔴 Alta</button>
+        <button class="prio-b med${curReviewPrio==='med'?' on':''}" onclick="setReqPrio('med',this)">🟡 Média</button>
+        <button class="prio-b low${curReviewPrio==='low'?' on':''}" onclick="setReqPrio('low',this)">🔵 Baixa</button>
+      </div>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Previsão de entrega</label>
+      <input class="fi" id="reqDueDate" type="date" value="${r.dueDate||''}">
+    </div>
+
+    <div class="fg">
+      <label class="fl">Resposta / observação</label>
+      <textarea class="fta" id="reqNote" style="min-height:70px" placeholder="Mensagem para o solicitante…">${esc(r.ownerNote||'')}</textarea>
+    </div>
+
+    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px">
+      <button onclick="setReqStatus('pendente')" style="flex:1" class="prio-b${r.status==='pendente'?' on med':''}">🔵 Pendente</button>
+      <button onclick="setReqStatus('atrasada')" style="flex:1" class="prio-b${r.status==='atrasada'?' on high':''}">🔴 Atrasada</button>
+      <button onclick="setReqStatus('concluida')" style="flex:1;background:${r.status==='concluida'?'var(--success-dim)':'transparent'};color:${r.status==='concluida'?'var(--success)':'var(--text-muted)'};border:1px solid ${r.status==='concluida'?'var(--success)':'var(--border)'};padding:8px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">✅ Concluída</button>
+    </div>
+
+    <div class="m-actions" style="margin-top:0">
+      <button class="btn-cancel" onclick="close1('reqMod')">Fechar</button>
+      <button class="btn-save" onclick="saveReq()">💾 Salvar</button>
+    </div>
+    <div style="text-align:center;margin-top:10px">
+      <button onclick="deleteReq('${token}','${reqId}')" style="background:none;border:none;color:var(--danger);font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline">Excluir solicitação</button>
+    </div>`
+
+  open1('reqMod')
+}
+
+function setReqPrio(p, btn){
+  curReviewPrio = p
+  document.querySelectorAll('#reqPrioRow .prio-b').forEach(b=>b.classList.remove('on'))
+  btn.classList.add('on')
+}
+
+function setReqStatus(status){
+  if(!curReviewToken||!curReviewId||!fbDb) return
+  const updates = { status }
+  if(status==='atrasada' || status==='concluida'){
+    // Also save prio/note/date if filled
+    const note = document.getElementById('reqNote')?.value.trim()||''
+    const dd = document.getElementById('reqDueDate')?.value||''
+    if(curReviewPrio) updates.priority = curReviewPrio
+    if(note) updates.ownerNote = note
+    if(dd) updates.dueDate = dd
+  }
+  fbDb.ref('requests/'+curReviewToken+'/'+curReviewId).update(updates)
+    .then(()=>{ toast('Status atualizado'); close1('reqMod') })
+    .catch(()=>toast('Erro ao atualizar'))
+}
+
+function saveReq(){
+  if(!curReviewToken||!curReviewId||!fbDb){ toast('Erro: sem conexão'); return }
+  const note = document.getElementById('reqNote').value.trim()
+  const dd = document.getElementById('reqDueDate').value
+  const updates = {
+    priority: curReviewPrio || null,
+    ownerNote: note || null,
+    dueDate: dd || null,
+    status: 'pendente' // moves from 'nova' to 'pendente' when owner responds
+  }
+  // If already was pendente/atrasada/concluida keep that status
+  const cur = (allRequests[curReviewToken]||{})[curReviewId]
+  if(cur && cur.status !== 'nova') updates.status = cur.status
+
+  fbDb.ref('requests/'+curReviewToken+'/'+curReviewId).update(updates)
+    .then(()=>{ toast('✅ Solicitação salva!'); close1('reqMod') })
+    .catch(()=>toast('❌ Erro ao salvar. Verifique conexão.'))
+}
+
+function deleteReq(token, reqId){
+  confirm2('Excluir esta solicitação?', ()=>{
+    if(!fbDb){ toast('Sem conexão'); return }
+    fbDb.ref('requests/'+token+'/'+reqId).remove()
+      .then(()=>{ toast('Solicitação excluída'); close1('reqMod') })
+      .catch(()=>toast('Erro ao excluir'))
+  })
+}
+
 /* ── MODAL HELPERS ── */
 function open1(id){ document.getElementById(id).classList.add('on') }
 function close1(id){ document.getElementById(id).classList.remove('on') }
@@ -1319,6 +1790,8 @@ if(window.AndroidBridge){ syncTasksToAndroid() }
 if(S.get('mem_notif_asked',false)&&typeof Notification!=='undefined'&&Notification.permission==='granted'){
   document.getElementById('notifBtn').classList.add('lit')
 }
+// Start listening to all contacts' Firebase requests
+subscribeAllContacts()
 
 // Check notifications every 30s
 setInterval(()=>{ checkNotifs(); renderTasks(); updateNotifUI() }, 30000)
