@@ -4,7 +4,6 @@
 <style>
 /* ─────────────────────────────────────────────────────
    DESIGN TOKENS — warm notebook dark-first
-   Layout: single-page mobile app, bottom nav, full height
    ───────────────────────────────────────────────────── */
 :root {
   --bg: #131210;
@@ -554,6 +553,25 @@ body {
   from { opacity:0; transform:translateY(-6px) scale(.96) }
   to   { opacity:1; transform:translateY(0)    scale(1)   }
 }
+
+/* ── SETTINGS MODAL ── */
+.cfg-row {
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.cfg-row:last-of-type { border-bottom: none }
+.cfg-label { font-size: 14px; font-weight: 500; color: var(--text-2) }
+.cfg-input {
+  width: 72px; padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r); background: var(--surface-2);
+  color: var(--text); font-size: 15px; font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  text-align: center; outline: none;
+  transition: border-color .15s;
+}
+.cfg-input:focus { border-color: var(--accent) }
 </style>
 
 <div id="app">
@@ -566,6 +584,9 @@ body {
       Memo <em>Build</em>
     </div>
     <div class="hdr-btns">
+      <button class="icn-btn" title="Configurar notificações" onclick="openSettings()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
       <button class="icn-btn" id="notifBtn" title="Notificações" style="position:relative" onclick="reqNotif()">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       </button>
@@ -734,6 +755,42 @@ body {
     </div>
   </div>
 
+  <!-- Settings Modal -->
+  <div class="overlay" id="settingsMod" onclick="closeBg(event,'settingsMod')">
+    <div class="modal">
+      <div class="m-handle"></div>
+      <div class="m-title">⚙️ Notificações por Prioridade</div>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.6">
+        Defina o intervalo de repetição da notificação para cada prioridade. A primeira notificação dispara no horário definido na tarefa.
+      </p>
+      <div class="cfg-row">
+        <span class="cfg-label">🔴 Prioridade Alta</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input class="cfg-input" id="cfgAlta" type="number" min="1" max="120" value="2">
+          <span style="font-size:13px;color:var(--text-muted)">min</span>
+        </div>
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-label">🟡 Prioridade Média</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input class="cfg-input" id="cfgMedia" type="number" min="1" max="120" value="5">
+          <span style="font-size:13px;color:var(--text-muted)">min</span>
+        </div>
+      </div>
+      <div class="cfg-row">
+        <span class="cfg-label">🟢 Prioridade Baixa</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input class="cfg-input" id="cfgBaixa" type="number" min="1" max="120" value="10">
+          <span style="font-size:13px;color:var(--text-muted)">min</span>
+        </div>
+      </div>
+      <div class="m-actions">
+        <button class="btn-cancel" onclick="close1('settingsMod')">Cancelar</button>
+        <button class="btn-save" onclick="saveNotifSettings()">💾 Salvar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Confirm Dialog -->
   <div class="overlay" id="confMod">
     <div class="confirm-dlg">
@@ -765,6 +822,7 @@ let calMon   = new Date()
 let selDate  = todayStr()
 let theme    = S.get('mem_theme','auto')
 let confCb   = null
+let notifCfg = S.get('mem_notif_cfg', {alta:2, media:5, baixa:10})
 
 /* ── HELPERS ── */
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6) }
@@ -1078,8 +1136,9 @@ function delTask(id){
   })
 }
 function syncTasksToAndroid(){
-  if(window.AndroidBridge&&AndroidBridge.saveTasks){
+  if(window.AndroidBridge){
     try{ AndroidBridge.saveTasks(JSON.stringify(tasks)) }catch(e){}
+    try{ AndroidBridge.saveSettings(JSON.stringify(notifCfg)) }catch(e){}
   }
 }
 
@@ -1119,6 +1178,27 @@ function delNote(id){
   })
 }
 
+/* ── SETTINGS ── */
+function openSettings(){
+  document.getElementById('cfgAlta').value = notifCfg.alta||2
+  document.getElementById('cfgMedia').value = notifCfg.media||5
+  document.getElementById('cfgBaixa').value = notifCfg.baixa||10
+  open1('settingsMod')
+}
+function saveNotifSettings(){
+  notifCfg = {
+    alta:  Math.max(1, parseInt(document.getElementById('cfgAlta').value)||2),
+    media: Math.max(1, parseInt(document.getElementById('cfgMedia').value)||5),
+    baixa: Math.max(1, parseInt(document.getElementById('cfgBaixa').value)||10)
+  }
+  S.set('mem_notif_cfg', notifCfg)
+  if(window.AndroidBridge){
+    try{ AndroidBridge.saveSettings(JSON.stringify(notifCfg)) }catch(e){}
+  }
+  close1('settingsMod')
+  toast('✅ Configurações salvas!')
+}
+
 /* ── MODAL HELPERS ── */
 function open1(id){ document.getElementById(id).classList.add('on') }
 function close1(id){ document.getElementById(id).classList.remove('on') }
@@ -1140,7 +1220,7 @@ async function reqNotif(){
     document.getElementById('notifHint').style.display='none'
     document.getElementById('notifBtn').classList.add('lit')
     checkNotifs()
-    toast('🔔 Notificações ativadas! Você será lembrado a cada 5 minutos.')
+    toast('🔔 Notificações ativadas!')
     return
   }
   if(!('Notification' in window)){ toast('Navegador sem suporte a notificações'); return }
@@ -1151,9 +1231,9 @@ async function reqNotif(){
     document.getElementById('notifHint').style.display='none'
     document.getElementById('notifBtn').classList.add('lit')
     checkNotifs()
-    toast('🔔 Notificações ativadas! Você será lembrado a cada 5 minutos enquanto houver tarefas pendentes.')
+    toast('🔔 Notificações ativadas!')
   } else {
-    toast('Notificações bloqueadas. Ative nas configurações do navegador para receber lembretes.')
+    toast('Notificações bloqueadas. Ative nas configurações do navegador.')
   }
 }
 function updateNotifUI(){
@@ -1171,7 +1251,6 @@ function updateNotifUI(){
   if(typeof Notification!=='undefined'){
     if(Notification.permission==='granted'){
       hint.style.display='none'; btn.classList.add('lit')
-      // notif badge on overdue
       const hasDue=tasks.some(t=>!t.completed&&t.dueDate&&t.dueDate<=todayStr())
       const existing=btn.querySelector('.notif-dot')
       if(hasDue&&!existing) btn.insertAdjacentHTML('beforeend','<div class="notif-dot"></div>')
@@ -1182,12 +1261,10 @@ function updateNotifUI(){
   }
 }
 function sendNotif(title, body){
-  // Native Android bridge (WebView APK)
   if(window.AndroidBridge){
     try{ AndroidBridge.showNotification(title, body) }catch(e){}
     return
   }
-  // Web browser fallback
   if(typeof Notification!=='undefined'&&Notification.permission==='granted'){
     try{ new Notification(title,{body,tag:title}) }catch(e){}
   }
@@ -1197,12 +1274,14 @@ function checkNotifs(){
   const hasWeb=typeof Notification!=='undefined'&&Notification.permission==='granted'
   if(!hasAndroid&&!hasWeb) return
   const today=todayStr(), now=nowTime()
-  const GAP=5*60*1000
   tasks.forEach(t=>{
     if(t.completed||!t.dueDate) return
     const due=t.dueDate<=today
     const timeOk=!t.dueTime||t.dueDate<today||(t.dueDate===today&&t.dueTime<=now)
     if(due&&timeOk){
+      const prio = t.priority||'med'
+      const gapMin = prio==='high'?(notifCfg.alta||2): prio==='low'?(notifCfg.baixa||10):(notifCfg.media||5)
+      const GAP = gapMin * 60 * 1000
       const last=lastN[t.id]||0
       if(Date.now()-last>=GAP){
         const ov=t.dueDate<today
@@ -1236,6 +1315,7 @@ applyTheme()
 renderTasks()
 renderNotes()
 updateNotifUI()
+if(window.AndroidBridge){ syncTasksToAndroid() }
 if(S.get('mem_notif_asked',false)&&typeof Notification!=='undefined'&&Notification.permission==='granted'){
   document.getElementById('notifBtn').classList.add('lit')
 }
