@@ -40,6 +40,7 @@ public class NotificationReceiver extends BroadcastReceiver {
             JSONObject lastN = new JSONObject(lastNJson);
             JSONObject settings = new JSONObject(settingsJson);
 
+            // Intervals in milliseconds per priority
             long gapAlta  = settings.optLong("alta",  2)  * 60 * 1000L;
             long gapMedia = settings.optLong("media", 5)  * 60 * 1000L;
             long gapBaixa = settings.optLong("baixa", 10) * 60 * 1000L;
@@ -63,9 +64,16 @@ public class NotificationReceiver extends BroadcastReceiver {
 
                 if (!dateOk || !timeOk) continue;
 
-                String priority = t.optString("priority", "media").toLowerCase();
-                long gap = priority.equals("alta") ? gapAlta :
-                           priority.equals("baixa") ? gapBaixa : gapMedia;
+                // Determine gap based on priority (supports both pt and en values)
+                String priority = t.optString("priority", "med").toLowerCase();
+                long gap;
+                if (priority.equals("alta") || priority.equals("high")) {
+                    gap = gapAlta;
+                } else if (priority.equals("baixa") || priority.equals("low")) {
+                    gap = gapBaixa;
+                } else {
+                    gap = gapMedia;
+                }
 
                 String id = t.optString("id", "");
                 long last = lastN.optLong(id, 0);
@@ -77,8 +85,9 @@ public class NotificationReceiver extends BroadcastReceiver {
                 String desc = t.optString("description", "");
                 if (!desc.isEmpty()) body += "\n" + desc;
 
-                String prioLabel = priority.equals("alta") ? "🔴 Alta" :
-                                   priority.equals("baixa") ? "🟢 Baixa" : "🟡 Média";
+                // Priority label in notification
+                String prioLabel = (priority.equals("alta") || priority.equals("high")) ? "🔴 Alta" :
+                                   (priority.equals("baixa") || priority.equals("low")) ? "🟢 Baixa" : "🟡 Média";
                 body += "\nPrioridade: " + prioLabel;
 
                 NotificationCompat.Builder builder =
