@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Memo Build — Solicitações</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#131210;--surface:#1d1b17;--surface-2:#272420;--surface-3:#322f29;
+  --border:#3a3730;--border-2:#4a4740;
+  --accent:#e8920c;--accent-2:#f0a830;
+  --accent-dim:rgba(232,146,12,.13);--accent-dim-2:rgba(232,146,12,.22);
+  --text:#f0ece2;--text-2:#c4bfb0;--text-muted:#8a8474;--text-ghost:#5a5650;
+  --success:#4ade80;--success-dim:rgba(74,222,128,.14);
+  --danger:#f87171;--danger-dim:rgba(248,113,113,.13);
+  --warn:#fbbf24;--warn-dim:rgba(251,191,36,.13);
+  --info:#60a5fa;--info-dim:rgba(96,165,250,.12);
+  --purple:#c084fc;--purple-dim:rgba(192,132,252,.14);
+  --r:10px;--r-sm:6px;--r-lg:16px;
+  color-scheme:dark;
+}
+@media(prefers-color-scheme:light){
+  :root{
+    --bg:#faf8f2;--surface:#fff;--surface-2:#f4f1e8;--surface-3:#ece9dc;
+    --border:#e0dace;--border-2:#ccc7b7;
+    --accent:#c07600;--accent-2:#d98800;
+    --accent-dim:rgba(192,118,0,.1);--accent-dim-2:rgba(192,118,0,.18);
+    --text:#1a1714;--text-2:#4a4540;--text-muted:#7a7060;--text-ghost:#b0a898;
+    --success:#16a34a;--success-dim:rgba(22,163,74,.12);
+    --danger:#dc2626;--danger-dim:rgba(220,38,38,.1);
+    --warn:#d97706;--warn-dim:rgba(217,119,6,.1);
+    --info:#2563eb;--info-dim:rgba(37,99,235,.1);
+    --purple:#9333ea;--purple-dim:rgba(147,51,234,.12);
+    color-scheme:light;
+  }
+}
+html,body{min-height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text)}
+body{padding:0;padding-top:env(safe-area-inset-top,0);padding-bottom:env(safe-area-inset-bottom,0)}
+
+header{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:0 20px;height:58px;display:flex;align-items:center;gap:10px;
+  position:sticky;top:env(safe-area-inset-top,0);z-index:10;
+}
+.logo{font-family:'Outfit',sans-serif;font-weight:800;font-size:1.1rem;color:var(--accent);letter-spacing:-.01em}
+.logo em{color:var(--text-2);font-style:normal;font-weight:500}
+.page-wrap{max-width:520px;margin:0 auto;padding:20px 16px 40px}
+
+.greeting{
+  background:linear-gradient(135deg,var(--accent-dim-2),var(--accent-dim));
+  border:1px solid var(--accent);border-radius:var(--r-lg);
+  padding:18px 20px;margin-bottom:20px;
+}
+.greeting h2{font-family:'Outfit',sans-serif;font-size:1.15rem;font-weight:700;color:var(--accent-2);margin-bottom:4px}
+.greeting p{font-size:.85rem;color:var(--text-2);line-height:1.6}
+
+.section-title{font-family:'Outfit',sans-serif;font-weight:700;font-size:.95rem;color:var(--text-2);letter-spacing:.02em;text-transform:uppercase;margin-bottom:10px;margin-top:20px}
+
+/* Form */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px;margin-bottom:14px}
+.card h3{font-family:'Outfit',sans-serif;font-weight:700;font-size:1rem;margin-bottom:14px;color:var(--text)}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field label{font-size:.78rem;font-weight:600;color:var(--text-2);letter-spacing:.02em}
+.field input,.field textarea{
+  background:var(--surface-2);border:1px solid var(--border-2);
+  border-radius:var(--r-sm);color:var(--text);font-family:inherit;
+  font-size:.9rem;padding:9px 12px;outline:none;transition:border-color .15s;width:100%;
+}
+.field input:focus,.field textarea:focus{border-color:var(--accent)}
+.field textarea{resize:vertical;min-height:80px}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:10px 18px;border-radius:var(--r-sm);border:none;
+  font-family:inherit;font-size:.9rem;font-weight:600;
+  cursor:pointer;transition:opacity .15s;width:100%;
+}
+.btn:hover{opacity:.85}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-ghost{background:var(--surface-2);color:var(--text-2);border:1px solid var(--border)}
+
+/* Request cards */
+.req-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:14px 16px;margin-bottom:10px;
+}
+.req-card.nova{border-left:3px solid var(--purple)}
+.req-card.pendente{border-left:3px solid var(--info)}
+.req-card.atrasada{border-left:3px solid var(--danger)}
+.req-card.concluida{border-left:3px solid var(--success);opacity:.75}
+
+.req-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:6px}
+.req-title{font-weight:600;font-size:.92rem;flex:1;min-width:0}
+.req-title.done{text-decoration:line-through;color:var(--text-muted)}
+.pill{
+  font-size:.68rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  padding:3px 8px;border-radius:20px;flex-shrink:0;
+}
+.pill-nova{background:var(--purple-dim);color:var(--purple)}
+.pill-pendente{background:var(--info-dim);color:var(--info)}
+.pill-atrasada{background:var(--danger-dim);color:var(--danger)}
+.pill-concluida{background:var(--success-dim);color:var(--success)}
+
+.req-desc{font-size:.82rem;color:var(--text-2);margin-bottom:8px;line-height:1.5}
+.req-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.76rem;color:var(--text-muted)}
+.chip{
+  display:inline-flex;align-items:center;gap:3px;
+  background:var(--surface-2);padding:3px 8px;border-radius:20px;
+  border:1px solid var(--border);
+}
+.chip.high{background:var(--danger-dim);color:var(--danger);border-color:transparent}
+.chip.med{background:var(--warn-dim);color:var(--warn);border-color:transparent}
+.chip.low{background:var(--info-dim);color:var(--info);border-color:transparent}
+
+.owner-note{
+  background:var(--accent-dim);border:1px solid var(--accent-dim-2);
+  border-radius:var(--r-sm);padding:8px 10px;margin-top:8px;
+  font-size:.8rem;color:var(--text-2);line-height:1.5;
+}
+.owner-note strong{color:var(--accent-2)}
+
+/* Empty & loading */
+.empty-state{text-align:center;padding:40px 0;color:var(--text-muted)}
+.empty-state .ico{font-size:2rem;margin-bottom:8px}
+.empty-state p{font-size:.88rem}
+.spinner-wrap{text-align:center;padding:30px;color:var(--text-muted);font-size:.88rem}
+.spinner{display:inline-block;width:22px;height:22px;border:2px solid var(--border-2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-right:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Error */
+#error-view{text-align:center;padding:60px 20px}
+#error-view .ico{font-size:3rem;margin-bottom:12px}
+#error-view h2{font-family:'Outfit',sans-serif;margin-bottom:8px}
+#error-view p{color:var(--text-muted);font-size:.9rem}
+
+/* Success toast */
+.toast{
+  position:fixed;bottom:calc(24px + env(safe-area-inset-bottom,0));left:50%;transform:translateX(-50%);
+  background:var(--surface-3);border:1px solid var(--border-2);color:var(--text);
+  padding:10px 18px;border-radius:30px;font-size:.85rem;font-weight:500;
+  box-shadow:0 4px 16px rgba(0,0,0,.4);z-index:100;
+  animation:fadeUp .3s ease;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+</style>
+</head>
+<body>
+
+<div id="error-view" hidden>
+  <div class="ico">🔗</div>
+  <h2>Link inválido</h2>
+  <p>Este link não é válido ou expirou.<br>Peça um novo link ao responsável.</p>
+</div>
+
+<div id="main-view" hidden>
+  <header>
+    <div class="logo">Memo <em>Build</em></div>
+  </header>
+
+  <div class="page-wrap">
+    <div class="greeting">
+      <h2>📋 Portal de Solicitações</h2>
+      <p>Envie suas solicitações e acompanhe o status de cada uma delas aqui.</p>
+    </div>
+
+    <!-- Nova Solicitação -->
+    <div class="section-title">Nova Solicitação</div>
+    <div class="card">
+      <div class="field">
+        <label>Título *</label>
+        <input id="inp-title" type="text" placeholder="O que você precisa?" maxlength="100">
+      </div>
+      <div class="field">
+        <label>Descrição (opcional)</label>
+        <textarea id="inp-desc" placeholder="Mais detalhes…"></textarea>
+      </div>
+      <button class="btn btn-primary" id="btn-send" onclick="sendRequest()">📤 Enviar Solicitação</button>
+    </div>
+
+    <!-- Lista -->
+    <div class="section-title">Minhas Solicitações</div>
+    <div id="list-area">
+      <div class="spinner-wrap"><span class="spinner"></span>Carregando…</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.1/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.1/firebase-database-compat.min.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyArRSR87rQzOM5qQCVMA5RUdhumCY71P6c",
+  authDomain: "memo-build.firebaseapp.com",
+  databaseURL: "https://memo-build-default-rtdb.firebaseio.com",
+  projectId: "memo-build",
+  storageBucket: "memo-build.firebasestorage.app",
+  messagingSenderId: "970496536577",
+  appId: "1:970496536577:web:8d7266fb3cb6d0a34c5000"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+/* ── token from URL ── */
+const params = new URLSearchParams(location.search);
+const TOKEN = params.get('token');
+
+if (!TOKEN) {
+  document.getElementById('error-view').hidden = false;
+} else {
+  document.getElementById('main-view').hidden = false;
+  setupListener();
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,8) }
+
+async function sendRequest() {
+  const title = document.getElementById('inp-title').value.trim();
+  if (!title) { document.getElementById('inp-title').focus(); return; }
+  const desc = document.getElementById('inp-desc').value.trim();
+  const btn = document.getElementById('btn-send');
+  btn.disabled = true;
+  btn.textContent = 'Enviando…';
+  try {
+    const id = uid();
+    await db.ref('requests/' + TOKEN + '/' + id).set({
+      title, description: desc || '',
+      status: 'nova', priority: null, dueDate: null, ownerNote: null,
+      createdAt: Date.now()
+    });
+    document.getElementById('inp-title').value = '';
+    document.getElementById('inp-desc').value = '';
+    toast('✅ Solicitação enviada!');
+  } catch(e) {
+    toast('❌ Erro ao enviar. Tente novamente.');
+  }
+  btn.disabled = false;
+  btn.textContent = '📤 Enviar Solicitação';
+}
+
+function setupListener() {
+  db.ref('requests/' + TOKEN).on('value', snap => {
+    const val = snap.val() || {};
+    const list = Object.entries(val)
+      .map(([id, d]) => ({ id, ...d }))
+      .sort((a, b) => b.createdAt - a.createdAt);
+    renderList(list);
+  });
+}
+
+function renderList(list) {
+  const area = document.getElementById('list-area');
+  if (!list.length) {
+    area.innerHTML = '<div class="empty-state"><div class="ico">📭</div><p>Nenhuma solicitação ainda.<br>Envie a primeira acima!</p></div>';
+    return;
+  }
+  area.innerHTML = list.map(r => cardHtml(r)).join('');
+}
+
+function statusLabel(s) {
+  return {nova:'Nova', pendente:'Pendente', atrasada:'Atrasada', concluida:'Concluída'}[s] || s;
+}
+function prioLabel(p) {
+  return {high:'🔴 Alta', med:'🟡 Média', low:'🔵 Baixa'}[p] || '';
+}
+function fmtDate(d) {
+  if (!d) return '';
+  const [y,m,dd] = d.split('-');
+  return dd+'/'+m+'/'+y;
+}
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function cardHtml(r) {
+  const prioChip = r.priority ? `<span class="chip ${r.priority}">${prioLabel(r.priority)}</span>` : '';
+  const dateChip = r.dueDate ? `<span class="chip">📅 Previsão: ${fmtDate(r.dueDate)}</span>` : '';
+  const noteHtml = r.ownerNote ? `<div class="owner-note"><strong>Resposta:</strong> ${esc(r.ownerNote)}</div>` : '';
+  return `
+    <div class="req-card ${r.status}">
+      <div class="req-top">
+        <div class="req-title${r.status==='concluida'?' done':''}">${esc(r.title)}</div>
+        <span class="pill pill-${r.status}">${statusLabel(r.status)}</span>
+      </div>
+      ${r.description ? `<div class="req-desc">${esc(r.description)}</div>` : ''}
+      <div class="req-meta">${prioChip}${dateChip}</div>
+      ${noteHtml}
+    </div>`;
+}
+
+function toast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+</script>
+</body>
+</html>
