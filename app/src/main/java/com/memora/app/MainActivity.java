@@ -17,6 +17,9 @@ import androidx.core.content.ContextCompat;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
+import com.onesignal.Continue;
+import com.onesignal.OneSignal;
+import com.onesignal.debug.LogLevel;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
@@ -34,6 +37,11 @@ public class MainActivity extends AppCompatActivity {
         requestNotificationPermission();
         scheduleAlarm();
         scheduleRequestCheck();
+
+        // OneSignal — notificações em tempo real com app fechado
+        OneSignal.getDebug().setLogLevel(LogLevel.NONE);
+        OneSignal.initWithContext(this, "98b29f95-5602-4f52-a32a-b499ce0a467f");
+        OneSignal.getNotifications().requestPermission(true, Continue.none());
 
         WebView web = findViewById(R.id.webview);
         WebSettings s = web.getSettings();

@@ -217,6 +217,8 @@ if (!TOKEN) {
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,8) }
 
+const WORKER_URL = 'https://memora-notify.SEU_SUBDOMINIO.workers.dev'; // Atualizar após 1º deploy
+
 async function sendRequest() {
   const title = document.getElementById('inp-title').value.trim();
   if (!title) { document.getElementById('inp-title').focus(); return; }
@@ -231,6 +233,19 @@ async function sendRequest() {
       status: 'nova', priority: null, dueDate: null, ownerNote: null,
       createdAt: Date.now()
     });
+
+    // Busca nome do contato no Firebase e notifica via Cloudflare Worker
+    let contactName = 'Contato';
+    try {
+      const snap = await db.ref('contacts/' + TOKEN + '/name').get();
+      if (snap.exists()) contactName = snap.val();
+    } catch(e) {}
+    fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, description: desc || '', contactName })
+    }).catch(() => {});
+
     document.getElementById('inp-title').value = '';
     document.getElementById('inp-desc').value = '';
     toast('✅ Solicitação enviada!');
