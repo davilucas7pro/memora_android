@@ -1376,6 +1376,17 @@ function togTask(id){
   if(t.completed){ delete lastN[id]; toast('✅ Tarefa concluída!') }
   S.set('mem_tasks',tasks); S.set('mem_lastn',lastN)
   syncTasksToAndroid()
+  // Sync request status to Firebase if this task came from a request
+  if(t.reqId && fbDb){
+    // Find which contact this request belongs to
+    for(const [token, reqs] of Object.entries(allRequests)){
+      if(reqs[t.reqId]){
+        const newStatus = t.completed ? 'concluida' : 'pendente'
+        fbDb.ref('requests/'+token+'/'+t.reqId).update({status: newStatus}).catch(()=>{})
+        break
+      }
+    }
+  }
   renderTasks()
 }
 function delTask(id){
@@ -1886,6 +1897,7 @@ function checkNotifs(){
   const hasWeb=typeof Notification!=='undefined'&&Notification.permission==='granted'
   if(!hasAndroid&&!hasWeb) return
   const today=todayStr(), now=nowTime()
+  let tasksChanged=false
   tasks.forEach(t=>{
     if(t.completed||!t.dueDate) return
     const due=t.dueDate<=today
@@ -1894,16 +1906,19 @@ function checkNotifs(){
       const prio = t.priority||'med'
       const gapMin = prio==='high'?(notifCfg.alta||2): prio==='low'?(notifCfg.baixa||10):(notifCfg.media||5)
       const GAP = gapMin * 60 * 1000
-      const last=lastN[t.id]||0
+      // Use _lastNotified stored on the task itself (survives JS context resets)
+      const last = t._lastNotified || 0
       if(Date.now()-last>=GAP){
         const ov=t.dueDate<today
         sendNotif('⏰ Memo Build — '+(ov?'Tarefa Atrasada':'Tarefa Pendente'),
           t.title+(t.description?'\n'+t.description:''))
-        lastN[t.id]=Date.now()
-        S.set('mem_lastn',lastN)
+        t._lastNotified = Date.now()
+        lastN[t.id]=t._lastNotified
+        tasksChanged=true
       }
     }
   })
+  if(tasksChanged){ S.set('mem_tasks',tasks); syncTasksToAndroid() }
 }
 
 /* ── TOAST ── */
