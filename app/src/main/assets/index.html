@@ -845,9 +845,6 @@ body {
       <div class="req-filters" id="panelFilters" style="padding:0 16px 10px">
         <button class="req-filter-btn on" onclick="setPanelFilter('all',this)">Todas</button>
         <button class="req-filter-btn" onclick="setPanelFilter('nova',this)">Nova</button>
-        <button class="req-filter-btn" onclick="setPanelFilter('pendente',this)">Pendente</button>
-        <button class="req-filter-btn" onclick="setPanelFilter('atrasada',this)">Atrasada</button>
-        <button class="req-filter-btn" onclick="setPanelFilter('concluida',this)">Concluída</button>
       </div>
       <div class="list" id="panelReqList" style="padding:0 16px 40px"></div>
     </div>
@@ -1509,30 +1506,35 @@ function subscribeContact(contact){
   if(!fbDb) return
   if(reqListeners[contact.token]) return // already subscribed
   const ref = fbDb.ref('requests/'+contact.token)
-  let firstLoad = true
+  let seenIds = null  // null = first load not done yet
   reqListeners[contact.token] = ref
   ref.on('value', snap=>{
     const val = snap.val() || {}
-    const prev = allRequests[contact.token] || {}
     allRequests[contact.token] = val
     updateLinksBadge()
     // Re-render contacts list and panel if open
     if(document.getElementById('tab-links').classList.contains('on')) renderContacts()
     if(curPanelToken === contact.token) renderPanelRequests()
-    // Notify on new requests (skip first load to avoid spam on open)
-    if(!firstLoad && window.AndroidBridge){
-      Object.entries(val).forEach(([id, r])=>{
-        if(!prev[id] && r.status === 'nova'){
-          try {
-            AndroidBridge.showNotification(
-              '📋 Nova solicitação — ' + contact.name,
-              r.title + (r.description ? '\n' + r.description : '')
-            )
-          } catch(e){}
-        }
-      })
+    // Notify on new requests
+    if(seenIds === null){
+      // First load: just record existing IDs, no notifications
+      seenIds = new Set(Object.keys(val))
+    } else {
+      // Subsequent updates: notify only for truly new 'nova' requests
+      if(window.AndroidBridge){
+        Object.entries(val).forEach(([id, r])=>{
+          if(!seenIds.has(id) && r.status === 'nova'){
+            try {
+              AndroidBridge.showNotification(
+                '📋 Nova solicitação — ' + contact.name,
+                r.title + (r.description ? '\n' + r.description : '')
+              )
+            } catch(e){}
+          }
+        })
+      }
+      seenIds = new Set(Object.keys(val))
     }
-    firstLoad = false
   })
 }
 
@@ -1615,33 +1617,42 @@ function setPanelFilter(f, btn){
   renderPanelRequests()
 }
 
+function getReqVisualStatus(r){
+  if(r.status === 'concluida') return 'concluida'
+  if(r.dueDate && r.dueDate < todayStr()) return 'atrasada'
+  if(r.status === 'pendente') return 'pendente'
+  return r.status || 'nova'
+}
+
 function renderPanelRequests(){
   const el = document.getElementById('panelReqList')
   if(!curPanelToken){ el.innerHTML=''; return }
   const reqs = allRequests[curPanelToken] || {}
   let list = Object.entries(reqs).map(([id,r])=>({...r,id}))
   list.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0))
-  if(panelFilter !== 'all') list = list.filter(r=>r.status===panelFilter)
+  if(panelFilter === 'nova') list = list.filter(r=>r.status==='nova')
 
   const statusLabel = s=>({nova:'Nova',pendente:'Pendente',atrasada:'Atrasada',concluida:'Concluída'}[s]||s)
   const prioLabel = p=>({high:'🔴 Alta',med:'🟡 Média',low:'🔵 Baixa'}[p]||'')
 
   if(!list.length){
-    el.innerHTML=`<div class="empty"><div class="empty-ico">📭</div><div class="empty-t">Nenhuma solicitação${panelFilter!=='all'?' nessa categoria':''}</div></div>`
+    el.innerHTML=`<div class="empty"><div class="empty-ico">📭</div><div class="empty-t">Nenhuma solicitação${panelFilter==='nova'?' nova':''}</div></div>`
     return
   }
-  el.innerHTML = list.map(r=>`
-    <div class="req-card ${r.status}" onclick="openReqModal('${curPanelToken}','${r.id}')">
+  el.innerHTML = list.map(r=>{
+    const vs = getReqVisualStatus(r)
+    return `
+    <div class="req-card ${vs}" onclick="openReqModal('${curPanelToken}','${r.id}')">
       <div class="req-top">
         <div class="req-title">${esc(r.title)}</div>
-        <span class="pill pill-${r.status}">${statusLabel(r.status)}</span>
+        <span class="pill pill-${vs}">${statusLabel(vs)}</span>
       </div>
       ${r.description?`<div class="req-desc">${esc(r.description)}</div>`:''}
       <div class="req-meta-row">
         ${r.priority?`<span class="req-chip ${r.priority}">${prioLabel(r.priority)}</span>`:''}
         ${r.dueDate?`<span class="req-chip">📅 ${fmtDateFull(r.dueDate)}</span>`:''}
       </div>
-    </div>`).join('')
+    </div>`}).join('')
 }
 
 
@@ -1684,16 +1695,13 @@ function openReqModal(token, reqId){
       <textarea class="fta" id="reqNote" style="min-height:70px" placeholder="Mensagem para o solicitante…">${esc(r.ownerNote||'')}</textarea>
     </div>
 
-    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px">
-      <button onclick="setReqStatus('pendente')" style="flex:1" class="prio-b${r.status==='pendente'?' on med':''}">🔵 Pendente</button>
-      <button onclick="setReqStatus('atrasada')" style="flex:1" class="prio-b${r.status==='atrasada'?' on high':''}">🔴 Atrasada</button>
-      <button onclick="setReqStatus('concluida')" style="flex:1;background:${r.status==='concluida'?'var(--success-dim)':'transparent'};color:${r.status==='concluida'?'var(--success)':'var(--text-muted)'};border:1px solid ${r.status==='concluida'?'var(--success)':'var(--border)'};padding:8px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">✅ Concluída</button>
-    </div>
-
     <div class="m-actions" style="margin-top:0">
       <button class="btn-cancel" onclick="close1('reqMod')">Fechar</button>
       <button class="btn-save" onclick="saveReq()">💾 Salvar</button>
     </div>
+    <button onclick="toggleReqDone('${token}','${reqId}')" style="width:100%;margin-top:8px;padding:11px;border-radius:var(--r);border:1px solid ${r.status==='concluida'?'var(--success)':'var(--border)'};background:${r.status==='concluida'?'var(--success-dim)':'transparent'};color:${r.status==='concluida'?'var(--success)':'var(--text-muted)'};font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
+      ${r.status==='concluida'?'↩️ Reabrir solicitação':'✅ Marcar como concluída'}
+    </button>
     <div style="text-align:center;margin-top:10px">
       <button onclick="deleteReq('${token}','${reqId}')" style="background:none;border:none;color:var(--danger);font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline">Excluir solicitação</button>
     </div>`
@@ -1707,19 +1715,21 @@ function setReqPrio(p, btn){
   btn.classList.add('on')
 }
 
-function setReqStatus(status){
-  if(!curReviewToken||!curReviewId||!fbDb) return
-  const updates = { status }
-  if(status==='atrasada' || status==='concluida'){
-    // Also save prio/note/date if filled
-    const note = document.getElementById('reqNote')?.value.trim()||''
-    const dd = document.getElementById('reqDueDate')?.value||''
-    if(curReviewPrio) updates.priority = curReviewPrio
-    if(note) updates.ownerNote = note
-    if(dd) updates.dueDate = dd
+function toggleReqDone(token, reqId){
+  if(!fbDb) return
+  const cur = (allRequests[token]||{})[reqId]
+  const newStatus = (cur && cur.status === 'concluida') ? 'pendente' : 'concluida'
+  const updates = { status: newStatus }
+  // If marking done, also sync task completion
+  if(newStatus === 'concluida'){
+    const t = tasks.find(t=>t.reqId===reqId)
+    if(t){ t.completed = true; S.set('mem_tasks',tasks); if(window.AndroidBridge) try{AndroidBridge.saveTasks(JSON.stringify(tasks))}catch(e){} renderTasks(); renderCal() }
+  } else {
+    const t = tasks.find(t=>t.reqId===reqId)
+    if(t){ t.completed = false; S.set('mem_tasks',tasks); if(window.AndroidBridge) try{AndroidBridge.saveTasks(JSON.stringify(tasks))}catch(e){} renderTasks(); renderCal() }
   }
-  fbDb.ref('requests/'+curReviewToken+'/'+curReviewId).update(updates)
-    .then(()=>{ toast('Status atualizado'); close1('reqMod') })
+  fbDb.ref('requests/'+token+'/'+reqId).update(updates)
+    .then(()=>{ toast(newStatus==='concluida'?'✅ Concluída!':'↩️ Reaberta'); close1('reqMod') })
     .catch(()=>toast('Erro ao atualizar'))
 }
 
@@ -1727,26 +1737,32 @@ function saveReq(){
   if(!curReviewToken||!curReviewId||!fbDb){ toast('Erro: sem conexão'); return }
   const note = document.getElementById('reqNote').value.trim()
   const dd = document.getElementById('reqDueDate').value
+  const cur = (allRequests[curReviewToken]||{})[curReviewId]
+
+  // Status: nova → pendente when saving; keep other statuses
+  let newStatus = 'pendente'
+  if(cur && cur.status === 'concluida') newStatus = 'concluida'
+
   const updates = {
     priority: curReviewPrio || null,
     ownerNote: note || null,
     dueDate: dd || null,
-    status: 'pendente'
+    status: newStatus
   }
-  const cur = (allRequests[curReviewToken]||{})[curReviewId]
-  if(cur && cur.status !== 'nova') updates.status = cur.status
 
   fbDb.ref('requests/'+curReviewToken+'/'+curReviewId).update(updates)
     .then(()=>{
-      // Se tem data e prioridade → cria tarefa automaticamente
-      if(dd && curReviewPrio && cur){
+      // Auto-create/update task when date AND priority are set
+      if(dd && curReviewPrio){
+        const title = cur ? cur.title : 'Solicitação'
+        const desc = cur ? (cur.description || (note ? '💬 '+note : '')) : (note ? '💬 '+note : '')
         const existingTask = tasks.find(t=>t.reqId===curReviewId)
         if(!existingTask){
           const newTask = {
             id: 'req_'+curReviewId,
             reqId: curReviewId,
-            title: cur.title,
-            description: cur.description || (note ? '💬 '+note : ''),
+            title,
+            description: desc,
             dueDate: dd,
             dueTime: '',
             priority: curReviewPrio,
@@ -1758,24 +1774,23 @@ function saveReq(){
           if(window.AndroidBridge) try{ AndroidBridge.saveTasks(JSON.stringify(tasks)) }catch(e){}
           renderTasks()
           renderCal()
-          toast('✅ Salvo e adicionado às tarefas!')
+          toast('✅ Adicionado às tarefas!')
         } else {
-          // Atualiza tarefa existente
           existingTask.dueDate = dd
           existingTask.priority = curReviewPrio
-          existingTask.description = cur.description || (note ? '💬 '+note : '')
+          existingTask.description = desc
           S.set('mem_tasks', tasks)
           if(window.AndroidBridge) try{ AndroidBridge.saveTasks(JSON.stringify(tasks)) }catch(e){}
           renderTasks()
           renderCal()
-          toast('✅ Salvo e tarefa atualizada!')
+          toast('✅ Tarefa atualizada!')
         }
       } else {
         toast('✅ Solicitação salva!')
       }
       close1('reqMod')
     })
-    .catch(()=>toast('❌ Erro ao salvar. Verifique conexão.'))
+    .catch(e=>{ console.error(e); toast('❌ Erro ao salvar. Verifique conexão.') })
 }
 
 function deleteReq(token, reqId){
