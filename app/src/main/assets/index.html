@@ -1780,7 +1780,7 @@ function renderPanelRequests(){
       ${r.description?`<div class="req-desc">${esc(r.description)}</div>`:''}
       <div class="req-meta-row">
         ${r.priority?`<span class="req-chip ${r.priority}">${prioLabel(r.priority)}</span>`:''}
-        ${r.dueDate?`<span class="req-chip">📅 ${fmtDateFull(r.dueDate)}</span>`:''}
+        ${r.dueDate?`<span class="req-chip">📅 ${fmtDateFull(r.dueDate)}${r.dueTime?' · '+r.dueTime:''}</span>`:''}
       </div>
     </div>`}).join('')
 }
@@ -1817,7 +1817,10 @@ function openReqModal(token, reqId){
 
     <div class="fg">
       <label class="fl">Previsão de entrega</label>
-      <input class="fi" id="reqDueDate" type="date" value="${r.dueDate||''}">
+      <div style="display:flex;gap:8px">
+        <input class="fi" id="reqDueDate" type="date" value="${r.dueDate||''}" style="flex:1">
+        <input class="fi" id="reqDueTime" type="time" value="${r.dueTime||''}" style="width:110px">
+      </div>
     </div>
 
     <div class="fg">
@@ -1867,6 +1870,7 @@ function saveReq(){
   if(!curReviewToken||!curReviewId||!fbDb){ toast('Erro: sem conexão'); return }
   const note = document.getElementById('reqNote').value.trim()
   const dd = document.getElementById('reqDueDate').value
+  const dt = document.getElementById('reqDueTime').value
   const cur = (allRequests[curReviewToken]||{})[curReviewId]
 
   // Status: nova → pendente when saving; keep other statuses
@@ -1877,6 +1881,7 @@ function saveReq(){
     priority: curReviewPrio || null,
     ownerNote: note || null,
     dueDate: dd || null,
+    dueTime: dt || null,
     status: newStatus
   }
 
@@ -1894,7 +1899,7 @@ function saveReq(){
             title,
             description: desc,
             dueDate: dd,
-            dueTime: '',
+            dueTime: dt || '',
             priority: curReviewPrio,
             completed: false,
             createdAt: Date.now()
@@ -1907,6 +1912,7 @@ function saveReq(){
           toast('✅ Adicionado às tarefas!')
         } else {
           existingTask.dueDate = dd
+          existingTask.dueTime = dt || ''
           existingTask.priority = curReviewPrio
           existingTask.description = desc
           S.set('mem_tasks', tasks)
@@ -2049,8 +2055,13 @@ function checkNotifs(){
       }
     } else {
       // Interval mode — gap in minutes
-      const gapMs=Math.max(1,parseInt(cfg.value)||5)*60*1000
-      shouldFire=nowMs-last>=gapMs
+      // If never notified (last===0), fire immediately on first check
+      if(last===0){
+        shouldFire=true
+      } else {
+        const gapMs=Math.max(1,parseInt(cfg.value)||5)*60*1000
+        shouldFire=nowMs-last>=gapMs
+      }
     }
     if(shouldFire){
       const ov=t.dueDate && t.dueDate<today
