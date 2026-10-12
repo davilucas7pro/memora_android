@@ -1463,6 +1463,7 @@ function saveContact(){
   const contact = { id: uid(), name, token, createdAt: Date.now() }
   contacts.unshift(contact)
   S.set('mem_contacts', contacts)
+  if(window.AndroidBridge) try{AndroidBridge.saveContacts(JSON.stringify(contacts))}catch(e){}
   close1('contactMod')
   subscribeContact(contact)
   renderContacts()
@@ -1481,6 +1482,7 @@ function delContact(id){
     delete allRequests[c.token]
     contacts = contacts.filter(x=>x.id!==id)
     S.set('mem_contacts', contacts)
+    if(window.AndroidBridge) try{AndroidBridge.saveContacts(JSON.stringify(contacts))}catch(e){}
     renderContacts()
     toast('Contato removido')
   })
@@ -1540,6 +1542,10 @@ function subscribeContact(contact){
 
 function subscribeAllContacts(){
   contacts.forEach(c => subscribeContact(c))
+  // Sync contacts to AndroidBridge so WorkManager can poll Firebase in background
+  if(window.AndroidBridge && contacts.length > 0){
+    try{ AndroidBridge.saveContacts(JSON.stringify(contacts)) }catch(e){}
+  }
 }
 
 function updateLinksBadge(){

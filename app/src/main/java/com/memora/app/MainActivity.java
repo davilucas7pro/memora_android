@@ -14,6 +14,10 @@ import android.webkit.WebView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -29,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
         NotificationReceiver.createChannel(this);
         requestNotificationPermission();
         scheduleAlarm();
+        scheduleRequestCheck();
 
         WebView web = findViewById(R.id.webview);
         WebSettings s = web.getSettings();
@@ -66,6 +71,12 @@ public class MainActivity extends AppCompatActivity {
             public void saveSettings(String settingsJson) {
                 SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
                 prefs.edit().putString("settings", settingsJson).apply();
+            }
+
+            @JavascriptInterface
+            public void saveContacts(String contactsJson) {
+                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                prefs.edit().putString("contacts", contactsJson).apply();
             }
 
         }, "AndroidBridge");
@@ -108,6 +119,16 @@ public class MainActivity extends AppCompatActivity {
                     new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 1);
             }
         }
+    }
+
+    private void scheduleRequestCheck() {
+        PeriodicWorkRequest work = new PeriodicWorkRequest.Builder(
+                RequestCheckWorker.class, 15, TimeUnit.MINUTES)
+                .build();
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+                "request_check",
+                ExistingPeriodicWorkPolicy.KEEP,
+                work);
     }
 
     private void scheduleAlarm() {
