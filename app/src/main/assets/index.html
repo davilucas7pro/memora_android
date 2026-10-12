@@ -314,9 +314,10 @@ body {
   padding: 2px 7px; border-radius: 100px;
   text-transform: uppercase; letter-spacing: .3px;
 }
-.badge.high { background: var(--danger-dim); color: var(--danger) }
-.badge.med  { background: var(--warn-dim);   color: var(--warn)   }
-.badge.low  { background: var(--info-dim);   color: var(--info)   }
+.badge.high   { background: var(--danger-dim); color: var(--danger) }
+.badge.med    { background: var(--warn-dim);   color: var(--warn)   }
+.badge.low    { background: var(--info-dim);   color: var(--info)   }
+.badge.custom { background: var(--purple-dim); color: var(--purple) }
 
 .task-del {
   width: 28px; height: 28px; border-radius: var(--r-sm);
@@ -498,9 +499,10 @@ body {
   font-family: 'DM Sans', sans-serif; cursor: pointer;
   text-align: center; transition: all .15s;
 }
-.prio-b.high.on { background: var(--danger-dim); border-color: var(--danger); color: var(--danger) }
-.prio-b.med.on  { background: var(--warn-dim);   border-color: var(--warn);   color: var(--warn)   }
-.prio-b.low.on  { background: var(--info-dim);   border-color: var(--info);   color: var(--info)   }
+.prio-b.high.on   { background: var(--danger-dim); border-color: var(--danger); color: var(--danger) }
+.prio-b.med.on    { background: var(--warn-dim);   border-color: var(--warn);   color: var(--warn)   }
+.prio-b.low.on    { background: var(--info-dim);   border-color: var(--info);   color: var(--info)   }
+.prio-b.custom.on { background: var(--purple-dim); border-color: var(--purple); color: var(--purple) }
 
 .m-actions { display: flex; gap: 8px; margin-top: 18px }
 .btn-cancel {
@@ -568,6 +570,21 @@ body {
 }
 
 /* ── SETTINGS MODAL ── */
+.prio-cfg-block {
+  background: var(--surface-2); border-radius: var(--r);
+  padding: 12px 14px; margin-bottom: 10px;
+  border: 1px solid var(--border);
+}
+.prio-cfg-label { font-size: 13px; font-weight: 700; margin-bottom: 8px; color: var(--text) }
+.cfg-mode-row { display: flex; gap: 6px; margin-bottom: 8px }
+.cfg-mode-btn {
+  flex: 1; padding: 6px 4px; border-radius: var(--r-sm);
+  border: 1px solid var(--border-2); background: transparent;
+  color: var(--text-muted); font-size: 12px; font-weight: 600;
+  font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all .15s;
+}
+.cfg-mode-btn.active { background: var(--accent-dim-2); border-color: var(--accent); color: var(--accent) }
+.cfg-val-row { display: flex; align-items: center; gap: 8px }
 .cfg-row {
   display: flex; align-items: center;
   justify-content: space-between; gap: 12px;
@@ -904,6 +921,7 @@ body {
           <button class="prio-b high" onclick="setPrio('high',this)">🔴 Alta</button>
           <button class="prio-b med on" onclick="setPrio('med',this)">🟡 Média</button>
           <button class="prio-b low" onclick="setPrio('low',this)">🔵 Baixa</button>
+          <button class="prio-b custom" onclick="setPrio('custom',this)">⭐ Custom</button>
         </div>
       </div>
       <div class="m-actions">
@@ -941,27 +959,75 @@ body {
       <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.6">
         Defina o intervalo de repetição da notificação para cada prioridade. A primeira notificação dispara no horário definido na tarefa.
       </p>
-      <div class="cfg-row">
-        <span class="cfg-label">🔴 Prioridade Alta</span>
-        <div style="display:flex;align-items:center;gap:6px">
-          <input class="cfg-input" id="cfgAlta" type="number" min="1" max="120" value="2">
+
+      <!-- Alta -->
+      <div class="prio-cfg-block">
+        <div class="prio-cfg-label">🔴 Prioridade Alta</div>
+        <div class="cfg-mode-row">
+          <button class="cfg-mode-btn active" id="modeBtn-alta-min" onclick="setPrioMode('alta','min')">⏱ Intervalo</button>
+          <button class="cfg-mode-btn" id="modeBtn-alta-time" onclick="setPrioMode('alta','time')">🕐 Horário Fixo</button>
+        </div>
+        <div class="cfg-val-row" id="cfgMinRow-alta">
+          <input class="cfg-input" id="cfgMin-alta" type="number" min="1" max="1440" value="2">
           <span style="font-size:13px;color:var(--text-muted)">min</span>
         </div>
-      </div>
-      <div class="cfg-row">
-        <span class="cfg-label">🟡 Prioridade Média</span>
-        <div style="display:flex;align-items:center;gap:6px">
-          <input class="cfg-input" id="cfgMedia" type="number" min="1" max="120" value="5">
-          <span style="font-size:13px;color:var(--text-muted)">min</span>
+        <div class="cfg-val-row" id="cfgTimeRow-alta" style="display:none">
+          <input class="cfg-input" id="cfgTime-alta" type="time" value="09:00" style="width:110px">
+          <span style="font-size:12px;color:var(--text-muted)">1× por dia</span>
         </div>
       </div>
-      <div class="cfg-row">
-        <span class="cfg-label">🟢 Prioridade Baixa</span>
-        <div style="display:flex;align-items:center;gap:6px">
-          <input class="cfg-input" id="cfgBaixa" type="number" min="1" max="120" value="10">
+
+      <!-- Média -->
+      <div class="prio-cfg-block">
+        <div class="prio-cfg-label">🟡 Prioridade Média</div>
+        <div class="cfg-mode-row">
+          <button class="cfg-mode-btn active" id="modeBtn-media-min" onclick="setPrioMode('media','min')">⏱ Intervalo</button>
+          <button class="cfg-mode-btn" id="modeBtn-media-time" onclick="setPrioMode('media','time')">🕐 Horário Fixo</button>
+        </div>
+        <div class="cfg-val-row" id="cfgMinRow-media">
+          <input class="cfg-input" id="cfgMin-media" type="number" min="1" max="1440" value="5">
           <span style="font-size:13px;color:var(--text-muted)">min</span>
         </div>
+        <div class="cfg-val-row" id="cfgTimeRow-media" style="display:none">
+          <input class="cfg-input" id="cfgTime-media" type="time" value="09:00" style="width:110px">
+          <span style="font-size:12px;color:var(--text-muted)">1× por dia</span>
+        </div>
       </div>
+
+      <!-- Baixa -->
+      <div class="prio-cfg-block">
+        <div class="prio-cfg-label">🟢 Prioridade Baixa</div>
+        <div class="cfg-mode-row">
+          <button class="cfg-mode-btn active" id="modeBtn-baixa-min" onclick="setPrioMode('baixa','min')">⏱ Intervalo</button>
+          <button class="cfg-mode-btn" id="modeBtn-baixa-time" onclick="setPrioMode('baixa','time')">🕐 Horário Fixo</button>
+        </div>
+        <div class="cfg-val-row" id="cfgMinRow-baixa">
+          <input class="cfg-input" id="cfgMin-baixa" type="number" min="1" max="1440" value="10">
+          <span style="font-size:13px;color:var(--text-muted)">min</span>
+        </div>
+        <div class="cfg-val-row" id="cfgTimeRow-baixa" style="display:none">
+          <input class="cfg-input" id="cfgTime-baixa" type="time" value="09:00" style="width:110px">
+          <span style="font-size:12px;color:var(--text-muted)">1× por dia</span>
+        </div>
+      </div>
+
+      <!-- Custom -->
+      <div class="prio-cfg-block">
+        <div class="prio-cfg-label">⭐ Prioridade Personalizada</div>
+        <div class="cfg-mode-row">
+          <button class="cfg-mode-btn active" id="modeBtn-custom-min" onclick="setPrioMode('custom','min')">⏱ Intervalo</button>
+          <button class="cfg-mode-btn" id="modeBtn-custom-time" onclick="setPrioMode('custom','time')">🕐 Horário Fixo</button>
+        </div>
+        <div class="cfg-val-row" id="cfgMinRow-custom">
+          <input class="cfg-input" id="cfgMin-custom" type="number" min="1" max="1440" value="15">
+          <span style="font-size:13px;color:var(--text-muted)">min</span>
+        </div>
+        <div class="cfg-val-row" id="cfgTimeRow-custom" style="display:none">
+          <input class="cfg-input" id="cfgTime-custom" type="time" value="09:00" style="width:110px">
+          <span style="font-size:12px;color:var(--text-muted)">1× por dia</span>
+        </div>
+      </div>
+
       <div class="m-actions">
         <button class="btn-cancel" onclick="close1('settingsMod')">Cancelar</button>
         <button class="btn-save" onclick="saveNotifSettings()">💾 Salvar</button>
@@ -1056,7 +1122,23 @@ let calMon   = new Date()
 let selDate  = todayStr()
 let theme    = S.get('mem_theme','auto')
 let confCb   = null
-let notifCfg = S.get('mem_notif_cfg', {alta:2, media:5, baixa:10})
+// Migrate old format {alta:2,...} → new format {alta:{type:'min',value:2},...}
+function migrateNotifCfg(raw){
+  const def={alta:{type:'min',value:2},media:{type:'min',value:5},baixa:{type:'min',value:10},custom:{type:'min',value:15}}
+  if(!raw||typeof raw!=='object') return def
+  if(typeof raw.alta==='number'){
+    return {
+      alta:  {type:'min',value:raw.alta||2},
+      media: {type:'min',value:raw.media||5},
+      baixa: {type:'min',value:raw.baixa||10},
+      custom:{type:'min',value:15}
+    }
+  }
+  if(!raw.custom) raw.custom={type:'min',value:15}
+  return raw
+}
+let notifCfg = migrateNotifCfg(S.get('mem_notif_cfg', null))
+let notifTs  = S.get('mem_notif_ts', {})
 
 // All requests from Firebase: { [token]: { [reqId]: reqObj } }
 let allRequests = {}
@@ -1167,8 +1249,8 @@ function renderTasks(){
         else if(du){ dcls='ora'; dlbl='Hoje'+(t.dueTime?' · '+t.dueTime:'') }
         else{ dlbl=relDate(t.dueDate)+(t.dueTime?' · '+t.dueTime:'') }
       }
-      const bc={'high':'badge high','med':'badge med','low':'badge low'}[t.priority]||'badge med'
-      const bl={'high':'Alta','med':'Média','low':'Baixa'}[t.priority]||'Média'
+      const bc={'high':'badge high','med':'badge med','low':'badge low','custom':'badge custom'}[t.priority]||'badge med'
+      const bl={'high':'Alta','med':'Média','low':'Baixa','custom':'⭐'}[t.priority]||'Média'
       return`<div class="task-card${t.completed?' done':''}${ov?' over':du?' due':''}" onclick="openTaskModal(null,'${t.id}')">
         <div class="chk${t.completed?' on':''}" onclick="event.stopPropagation();togTask('${t.id}')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -1310,7 +1392,7 @@ function renderCalDay(){
         <div class="task-title">${esc(t.title)}</div>
         <div class="task-meta">
           ${t.dueTime?`<div class="task-date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="11" height="11"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${t.dueTime}</div>`:''}
-          <span class="${{'high':'badge high','med':'badge med','low':'badge low'}[t.priority]||'badge med'}">${{'high':'Alta','med':'Média','low':'Baixa'}[t.priority]||'Média'}</span>
+          <span class="${{'high':'badge high','med':'badge med','low':'badge low','custom':'badge custom'}[t.priority]||'badge med'}">${{'high':'Alta','med':'Média','low':'Baixa','custom':'⭐'}[t.priority]||'Média'}</span>
         </div>
       </div>
       <button class="task-del" onclick="event.stopPropagation();delTask('${t.id}');setTimeout(renderCal,80)" title="Excluir">
@@ -1339,7 +1421,7 @@ function openTaskModal(prefill, tid){
     curPrio='med'
   }
   document.querySelectorAll('.prio-b').forEach(b=>{
-    const p=b.classList.contains('high')?'high':b.classList.contains('med')?'med':'low'
+    const p=b.classList.contains('high')?'high':b.classList.contains('med')?'med':b.classList.contains('low')?'low':'custom'
     b.classList.toggle('on',p===curPrio)
   })
   open1('taskMod')
@@ -1373,7 +1455,7 @@ function saveTask(){
 function togTask(id){
   const t=tasks.find(x=>x.id===id); if(!t) return
   t.completed=!t.completed; t.completedAt=t.completed?Date.now():null
-  if(t.completed){ delete lastN[id]; toast('✅ Tarefa concluída!') }
+  if(t.completed){ delete lastN[id]; delete notifTs[id]; S.set('mem_notif_ts',notifTs); toast('✅ Tarefa concluída!') }
   S.set('mem_tasks',tasks); S.set('mem_lastn',lastN)
   syncTasksToAndroid()
   // Sync request status to Firebase if this task came from a request
@@ -1391,8 +1473,8 @@ function togTask(id){
 }
 function delTask(id){
   confirm2('Excluir esta tarefa?',()=>{
-    tasks=tasks.filter(x=>x.id!==id); delete lastN[id]
-    S.set('mem_tasks',tasks); S.set('mem_lastn',lastN)
+    tasks=tasks.filter(x=>x.id!==id); delete lastN[id]; delete notifTs[id]
+    S.set('mem_tasks',tasks); S.set('mem_lastn',lastN); S.set('mem_notif_ts',notifTs)
     syncTasksToAndroid()
     renderTasks(); renderCalDay(); toast('Tarefa removida')
   })
@@ -1441,18 +1523,39 @@ function delNote(id){
 }
 
 /* ── SETTINGS ── */
+function setPrioMode(prio, mode){
+  const minBtn  = document.getElementById('modeBtn-'+prio+'-min')
+  const timeBtn = document.getElementById('modeBtn-'+prio+'-time')
+  const minRow  = document.getElementById('cfgMinRow-'+prio)
+  const timeRow = document.getElementById('cfgTimeRow-'+prio)
+  if(mode==='min'){
+    minBtn.classList.add('active'); timeBtn.classList.remove('active')
+    minRow.style.display='flex'; timeRow.style.display='none'
+  } else {
+    timeBtn.classList.add('active'); minBtn.classList.remove('active')
+    timeRow.style.display='flex'; minRow.style.display='none'
+  }
+}
 function openSettings(){
-  document.getElementById('cfgAlta').value = notifCfg.alta||2
-  document.getElementById('cfgMedia').value = notifCfg.media||5
-  document.getElementById('cfgBaixa').value = notifCfg.baixa||10
+  const prioKeys=['alta','media','baixa','custom']
+  prioKeys.forEach(k=>{
+    const cfg=notifCfg[k]||{type:'min',value:k==='alta'?2:k==='media'?5:k==='baixa'?10:15}
+    setPrioMode(k, cfg.type||'min')
+    document.getElementById('cfgMin-'+k).value  = cfg.type==='min'  ? cfg.value : (k==='alta'?2:k==='media'?5:k==='baixa'?10:15)
+    document.getElementById('cfgTime-'+k).value = cfg.type==='time' ? cfg.value : '09:00'
+  })
   open1('settingsMod')
 }
 function saveNotifSettings(){
-  notifCfg = {
-    alta:  Math.max(1, parseInt(document.getElementById('cfgAlta').value)||2),
-    media: Math.max(1, parseInt(document.getElementById('cfgMedia').value)||5),
-    baixa: Math.max(1, parseInt(document.getElementById('cfgBaixa').value)||10)
-  }
+  const prioKeys=['alta','media','baixa','custom']
+  prioKeys.forEach(k=>{
+    const minBtn=document.getElementById('modeBtn-'+k+'-min')
+    const mode = minBtn.classList.contains('active') ? 'min' : 'time'
+    const value = mode==='min'
+      ? Math.max(1, parseInt(document.getElementById('cfgMin-'+k).value)||5)
+      : (document.getElementById('cfgTime-'+k).value||'09:00')
+    notifCfg[k]={type:mode, value}
+  })
   S.set('mem_notif_cfg', notifCfg)
   if(window.AndroidBridge){
     try{ AndroidBridge.saveSettings(JSON.stringify(notifCfg)) }catch(e){}
@@ -1653,7 +1756,7 @@ function renderPanelRequests(){
   if(panelFilter === 'nova') list = list.filter(r=>r.status==='nova')
 
   const statusLabel = s=>({nova:'Nova',pendente:'Pendente',atrasada:'Atrasada',concluida:'Concluída'}[s]||s)
-  const prioLabel = p=>({high:'🔴 Alta',med:'🟡 Média',low:'🔵 Baixa'}[p]||'')
+  const prioLabel = p=>({high:'🔴 Alta',med:'🟡 Média',low:'🔵 Baixa',custom:'⭐ Custom'}[p]||'')
 
   if(!list.length){
     el.innerHTML=`<div class="empty"><div class="empty-ico">📭</div><div class="empty-t">Nenhuma solicitação${panelFilter==='nova'?' nova':''}</div></div>`
@@ -1897,28 +2000,39 @@ function checkNotifs(){
   const hasWeb=typeof Notification!=='undefined'&&Notification.permission==='granted'
   if(!hasAndroid&&!hasWeb) return
   const today=todayStr(), now=nowTime()
-  let tasksChanged=false
+  let changed=false
   tasks.forEach(t=>{
     if(t.completed||!t.dueDate) return
     const due=t.dueDate<=today
     const timeOk=!t.dueTime||t.dueDate<today||(t.dueDate===today&&t.dueTime<=now)
-    if(due&&timeOk){
-      const prio = t.priority||'med'
-      const gapMin = prio==='high'?(notifCfg.alta||2): prio==='low'?(notifCfg.baixa||10):(notifCfg.media||5)
-      const GAP = gapMin * 60 * 1000
-      // Use _lastNotified stored on the task itself (survives JS context resets)
-      const last = t._lastNotified || 0
-      if(Date.now()-last>=GAP){
-        const ov=t.dueDate<today
-        sendNotif('⏰ Memo Build — '+(ov?'Tarefa Atrasada':'Tarefa Pendente'),
-          t.title+(t.description?'\n'+t.description:''))
-        t._lastNotified = Date.now()
-        lastN[t.id]=t._lastNotified
-        tasksChanged=true
+    if(!due||!timeOk) return
+    // Map task priority to notifCfg key
+    const cfgKey = t.priority==='high'?'alta':t.priority==='low'?'baixa':t.priority==='custom'?'custom':'media'
+    const cfg = notifCfg[cfgKey]||{type:'min',value:5}
+    const last = notifTs[t.id]||0
+    let shouldFire=false
+    if(cfg.type==='time'){
+      // Fire once per day at the configured time (HH:MM)
+      const hm=cfg.value||'09:00'
+      if(now>=hm){
+        // Did we already fire today after this time?
+        const todayAtTime=new Date(today+'T'+hm+':00').getTime()
+        shouldFire=last<todayAtTime
       }
+    } else {
+      // Interval mode — gap in minutes
+      const gapMs=Math.max(1,parseInt(cfg.value)||5)*60*1000
+      shouldFire=Date.now()-last>=gapMs
+    }
+    if(shouldFire){
+      const ov=t.dueDate<today
+      sendNotif('⏰ Memo Build — '+(ov?'Tarefa Atrasada':'Tarefa Pendente'),
+        t.title+(t.description?'\n'+t.description:''))
+      notifTs[t.id]=Date.now()
+      changed=true
     }
   })
-  if(tasksChanged){ S.set('mem_tasks',tasks); syncTasksToAndroid() }
+  if(changed) S.set('mem_notif_ts',notifTs)
 }
 
 /* ── TOAST ── */
