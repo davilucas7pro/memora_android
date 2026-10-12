@@ -1251,6 +1251,10 @@ function renderTasks(){
       }
       const bc={'high':'badge high','med':'badge med','low':'badge low','custom':'badge custom'}[t.priority]||'badge med'
       const bl={'high':'Alta','med':'Média','low':'Baixa','custom':'⭐'}[t.priority]||'Média'
+      // Notification interval label for active tasks
+      const cfgKey2=t.priority==='high'?'alta':t.priority==='low'?'baixa':t.priority==='custom'?'custom':'media'
+      const cfg2=notifCfg[cfgKey2]||{type:'min',value:5}
+      const notifLbl=t.completed?'':cfg2.type==='time'?`🔔 ${cfg2.value||'09:00'}`:`🔔 ${cfg2.value||5}min`
       return`<div class="task-card${t.completed?' done':''}${ov?' over':du?' due':''}" onclick="openTaskModal(null,'${t.id}')">
         <div class="chk${t.completed?' on':''}" onclick="event.stopPropagation();togTask('${t.id}')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -1261,6 +1265,7 @@ function renderTasks(){
           <div class="task-meta">
             ${t.dueDate?`<div class="task-date ${dcls}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${dlbl}</div>`:''}
             <span class="${bc}">${bl}</span>
+            ${notifLbl?`<span style="font-size:11px;color:var(--text-muted);margin-left:2px">${notifLbl}</span>`:''}
           </div>
         </div>
         <button class="task-del" onclick="event.stopPropagation();delTask('${t.id}')" title="Excluir">
@@ -1451,6 +1456,8 @@ function saveTask(){
   syncTasksToAndroid()
   close1('taskMod'); renderTasks(); renderCalDay()
   toast(editTaskId?'Tarefa atualizada!':'Tarefa criada! 🎯')
+  // Immediately check notifications so first alert fires right away
+  setTimeout(checkNotifs, 500)
 }
 function togTask(id){
   const t=tasks.find(x=>x.id===id); if(!t) return
@@ -1999,13 +2006,35 @@ function checkNotifs(){
   const hasAndroid=!!window.AndroidBridge
   const hasWeb=typeof Notification!=='undefined'&&Notification.permission==='granted'
   if(!hasAndroid&&!hasWeb) return
-  const today=todayStr(), now=nowTime()
+  const today=todayStr(), now=nowTime(), nowMs=Date.now()
   let changed=false
   tasks.forEach(t=>{
-    if(t.completed||!t.dueDate) return
-    const due=t.dueDate<=today
-    const timeOk=!t.dueTime||t.dueDate<today||(t.dueDate===today&&t.dueTime<=now)
-    if(!due||!timeOk) return
+    if(t.completed) return
+
+    // Determine when notifications should start for this task
+    let startMs = null
+    if(t.dueDate){
+      if(t.dueDate < today){
+        // Overdue — notify immediately
+        startMs = 0
+      } else if(t.dueDate === today){
+        if(t.dueTime){
+          // Has specific time today — start from that time
+          startMs = new Date(today+'T'+t.dueTime+':00').getTime()
+        } else {
+          // Due today, no time — start from when task was created (or saved)
+          startMs = t.createdAt||0
+        }
+      } else {
+        return // future date — skip
+      }
+    } else {
+      // No due date — notify from when the task was created
+      startMs = t.createdAt||0
+    }
+
+    if(nowMs < startMs) return // not yet time to start notifying
+
     // Map task priority to notifCfg key
     const cfgKey = t.priority==='high'?'alta':t.priority==='low'?'baixa':t.priority==='custom'?'custom':'media'
     const cfg = notifCfg[cfgKey]||{type:'min',value:5}
@@ -2013,22 +2042,22 @@ function checkNotifs(){
     let shouldFire=false
     if(cfg.type==='time'){
       // Fire once per day at the configured time (HH:MM)
-      const hm=cfg.value||'09:00'
+      const hm=String(cfg.value||'09:00')
       if(now>=hm){
-        // Did we already fire today after this time?
         const todayAtTime=new Date(today+'T'+hm+':00').getTime()
         shouldFire=last<todayAtTime
       }
     } else {
       // Interval mode — gap in minutes
       const gapMs=Math.max(1,parseInt(cfg.value)||5)*60*1000
-      shouldFire=Date.now()-last>=gapMs
+      shouldFire=nowMs-last>=gapMs
     }
     if(shouldFire){
-      const ov=t.dueDate<today
-      sendNotif('⏰ Memo Build — '+(ov?'Tarefa Atrasada':'Tarefa Pendente'),
+      const ov=t.dueDate && t.dueDate<today
+      const label=ov?'Tarefa Atrasada':t.dueDate===today?'Tarefa para Hoje':'Tarefa Pendente'
+      sendNotif('⏰ Memo Build — '+label,
         t.title+(t.description?'\n'+t.description:''))
-      notifTs[t.id]=Date.now()
+      notifTs[t.id]=nowMs
       changed=true
     }
   })
@@ -2069,7 +2098,8 @@ function saveFcmToken(token){
 // Start listening to all contacts' Firebase requests
 subscribeAllContacts()
 
-// Check notifications every 30s
+// Run once immediately on startup, then every 30s
+setTimeout(checkNotifs, 1500)
 setInterval(()=>{ checkNotifs(); renderTasks(); updateNotifUI() }, 30000)
 // Also check when user returns to the tab/app
 document.addEventListener('visibilitychange',()=>{
