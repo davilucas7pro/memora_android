@@ -635,6 +635,43 @@ body {
   text-transform: uppercase; color: var(--text-muted);
   margin-bottom: 8px; padding-top: 4px;
 }
+.req-filters {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;
+}
+.req-filter-btn {
+  padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text-muted);
+  font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+  transition: all .15s;
+}
+.req-filter-btn.on {
+  background: var(--accent-dim-2); border-color: var(--accent);
+  color: var(--accent-2);
+}
+/* Contact detail panel */
+.contact-panel {
+  position: fixed; inset: 0; background: var(--bg); z-index: 20;
+  display: flex; flex-direction: column;
+  transform: translateX(100%); transition: transform .28s cubic-bezier(.4,0,.2,1);
+  padding-top: env(safe-area-inset-top, 0);
+}
+.contact-panel.open { transform: translateX(0) }
+.contact-panel-head {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 0 16px; min-height: 58px; display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0; flex-wrap: wrap; padding-block: 10px;
+}
+.panel-back {
+  background: none; border: none; color: var(--text-2); cursor: pointer;
+  display: flex; align-items: center; padding: 4px; flex-shrink: 0;
+}
+.panel-title { font-family: 'Outfit',sans-serif; font-weight: 700; font-size: 1.05rem; flex: 1; min-width: 0 }
+.panel-link-row {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--text-muted); overflow: hidden;
+}
+.panel-link-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+#panelReqList { flex: 1; overflow-y: auto }
 .req-card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--r-lg); padding: 12px 14px; margin-bottom: 7px;
@@ -794,12 +831,25 @@ body {
 
       <!-- Contacts list -->
       <div id="contactList" class="list"></div>
+    </div>
 
-      <!-- All requests section -->
-      <div id="allReqSection" class="req-section" style="margin-top:12px">
-        <div class="req-section-title">Solicitações recebidas</div>
-        <div id="allReqList"></div>
+    <!-- CONTACT DETAIL PANEL (slide-in) -->
+    <div id="contactPanel" class="contact-panel">
+      <div class="contact-panel-head">
+        <button class="panel-back" onclick="closeContactPanel()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="panel-title" id="panelTitle">Contato</div>
+        <div class="panel-link-row" id="panelLinkRow"></div>
       </div>
+      <div class="req-filters" id="panelFilters" style="padding:0 16px 10px">
+        <button class="req-filter-btn on" onclick="setPanelFilter('all',this)">Todas</button>
+        <button class="req-filter-btn" onclick="setPanelFilter('nova',this)">Nova</button>
+        <button class="req-filter-btn" onclick="setPanelFilter('pendente',this)">Pendente</button>
+        <button class="req-filter-btn" onclick="setPanelFilter('atrasada',this)">Atrasada</button>
+        <button class="req-filter-btn" onclick="setPanelFilter('concluida',this)">Concluída</button>
+      </div>
+      <div class="list" id="panelReqList" style="padding:0 16px 40px"></div>
     </div>
 
   </main>
@@ -1017,6 +1067,9 @@ let reqListeners = {} // token -> firebase listener ref
 let curReviewToken = null
 let curReviewId    = null
 let curReviewPrio  = null
+let reqFilter = 'all'
+let curPanelToken = null
+let panelFilter = 'all'
 
 /* ── HELPERS ── */
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6) }
@@ -1463,10 +1516,9 @@ function subscribeContact(contact){
     const prev = allRequests[contact.token] || {}
     allRequests[contact.token] = val
     updateLinksBadge()
-    // If links tab visible, re-render
-    if(document.getElementById('tab-links').classList.contains('on')){
-      renderContacts()
-    }
+    // Re-render contacts list and panel if open
+    if(document.getElementById('tab-links').classList.contains('on')) renderContacts()
+    if(curPanelToken === contact.token) renderPanelRequests()
     // Notify on new requests (skip first load to avoid spam on open)
     if(!firstLoad && window.AndroidBridge){
       Object.entries(val).forEach(([id, r])=>{
@@ -1507,78 +1559,91 @@ function renderContacts(){
   const el = document.getElementById('contactList')
   if(!contacts.length){
     el.innerHTML=`<div class="empty"><div class="empty-ico">🔗</div><div class="empty-t">Nenhum contato ainda</div><p class="empty-s">Toque em "Novo contato" para gerar um link exclusivo e compartilhar</p></div>`
-    document.getElementById('allReqSection').style.display='none'
     return
   }
   el.innerHTML = contacts.map(c=>{
     const reqs = allRequests[c.token] || {}
     const total = Object.keys(reqs).length
     const novas = Object.values(reqs).filter(r=>r.status==='nova').length
-    const url = BASE_URL + '?token=' + c.token
     const initials = c.name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase()
-    return `<div class="contact-card">
+    return `<div class="contact-card" onclick="openContactPanel('${c.token}')">
       <div class="contact-top">
         <div class="contact-avatar">${esc(initials)}</div>
         <div class="contact-info">
           <div class="contact-name">${esc(c.name)}</div>
           <div class="contact-meta">${total} solicitaç${total===1?'ão':'ões'}${novas>0?' · <strong style="color:var(--purple)">'+novas+' nova'+(novas>1?'s':'')+'</strong>':''}</div>
         </div>
-        <div class="contact-btns">
-          <button class="task-del" onclick="delContact('${c.id}')" title="Excluir contato" style="color:var(--text-muted)">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-          </button>
-        </div>
-      </div>
-      <div class="contact-link-row">
-        <div class="contact-link-text">${esc(url)}</div>
-        <button class="copy-btn" onclick="copyLink('${c.token}')">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          Copiar
-        </button>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-ghost);flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
     </div>`
   }).join('')
-
-  renderAllRequests()
 }
 
-function renderAllRequests(){
-  // Flatten all requests across contacts, sorted by createdAt desc
-  let allList = []
-  contacts.forEach(c=>{
-    const reqs = allRequests[c.token] || {}
-    Object.entries(reqs).forEach(([id,r])=>{
-      allList.push({ ...r, id, token: c.token, contactName: c.name })
-    })
+function openContactPanel(token){
+  curPanelToken = token
+  panelFilter = 'all'
+  // Reset filter buttons
+  document.querySelectorAll('#panelFilters .req-filter-btn').forEach((b,i)=>{
+    b.classList.toggle('on', i===0)
   })
-  allList.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0))
+  const c = contacts.find(x=>x.token===token)
+  if(!c) return
+  const url = BASE_URL + '?token=' + token
+  document.getElementById('panelTitle').textContent = c.name
+  document.getElementById('panelLinkRow').innerHTML = `
+    <span class="panel-link-text">${esc(url)}</span>
+    <button class="copy-btn" onclick="event.stopPropagation();copyLink('${token}')">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copiar
+    </button>
+    <button class="task-del" onclick="event.stopPropagation();delContact('${c.id}')" style="color:var(--danger);margin-left:4px" title="Excluir contato">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+    </button>`
+  renderPanelRequests()
+  document.getElementById('contactPanel').classList.add('open')
+}
 
-  const section = document.getElementById('allReqSection')
-  const el = document.getElementById('allReqList')
+function closeContactPanel(){
+  document.getElementById('contactPanel').classList.remove('open')
+  curPanelToken = null
+}
 
-  if(!allList.length){
-    section.style.display = 'none'
+function setPanelFilter(f, btn){
+  panelFilter = f
+  document.querySelectorAll('#panelFilters .req-filter-btn').forEach(b=>b.classList.remove('on'))
+  btn.classList.add('on')
+  renderPanelRequests()
+}
+
+function renderPanelRequests(){
+  const el = document.getElementById('panelReqList')
+  if(!curPanelToken){ el.innerHTML=''; return }
+  const reqs = allRequests[curPanelToken] || {}
+  let list = Object.entries(reqs).map(([id,r])=>({...r,id}))
+  list.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0))
+  if(panelFilter !== 'all') list = list.filter(r=>r.status===panelFilter)
+
+  const statusLabel = s=>({nova:'Nova',pendente:'Pendente',atrasada:'Atrasada',concluida:'Concluída'}[s]||s)
+  const prioLabel = p=>({high:'🔴 Alta',med:'🟡 Média',low:'🔵 Baixa'}[p]||'')
+
+  if(!list.length){
+    el.innerHTML=`<div class="empty"><div class="empty-ico">📭</div><div class="empty-t">Nenhuma solicitação${panelFilter!=='all'?' nessa categoria':''}</div></div>`
     return
   }
-  section.style.display = 'block'
-
-  const statusLabel = s => ({nova:'Nova',pendente:'Pendente',atrasada:'Atrasada',concluida:'Concluída'}[s]||s)
-  const prioLabel = p => ({high:'🔴 Alta',med:'🟡 Média',low:'🔵 Baixa'}[p]||'')
-
-  el.innerHTML = allList.map(r=>`
-    <div class="req-card ${r.status}" onclick="openReqModal('${r.token}','${r.id}')">
+  el.innerHTML = list.map(r=>`
+    <div class="req-card ${r.status}" onclick="openReqModal('${curPanelToken}','${r.id}')">
       <div class="req-top">
         <div class="req-title">${esc(r.title)}</div>
         <span class="pill pill-${r.status}">${statusLabel(r.status)}</span>
       </div>
       ${r.description?`<div class="req-desc">${esc(r.description)}</div>`:''}
       <div class="req-meta-row">
-        <span class="contact-name-tag">${esc(r.contactName)}</span>
         ${r.priority?`<span class="req-chip ${r.priority}">${prioLabel(r.priority)}</span>`:''}
         ${r.dueDate?`<span class="req-chip">📅 ${fmtDateFull(r.dueDate)}</span>`:''}
       </div>
     </div>`).join('')
 }
+
 
 /* ── REQUEST REVIEW MODAL ── */
 function openReqModal(token, reqId){
@@ -1666,14 +1731,50 @@ function saveReq(){
     priority: curReviewPrio || null,
     ownerNote: note || null,
     dueDate: dd || null,
-    status: 'pendente' // moves from 'nova' to 'pendente' when owner responds
+    status: 'pendente'
   }
-  // If already was pendente/atrasada/concluida keep that status
   const cur = (allRequests[curReviewToken]||{})[curReviewId]
   if(cur && cur.status !== 'nova') updates.status = cur.status
 
   fbDb.ref('requests/'+curReviewToken+'/'+curReviewId).update(updates)
-    .then(()=>{ toast('✅ Solicitação salva!'); close1('reqMod') })
+    .then(()=>{
+      // Se tem data e prioridade → cria tarefa automaticamente
+      if(dd && curReviewPrio && cur){
+        const existingTask = tasks.find(t=>t.reqId===curReviewId)
+        if(!existingTask){
+          const newTask = {
+            id: 'req_'+curReviewId,
+            reqId: curReviewId,
+            title: cur.title,
+            description: cur.description || (note ? '💬 '+note : ''),
+            dueDate: dd,
+            dueTime: '',
+            priority: curReviewPrio,
+            completed: false,
+            createdAt: Date.now()
+          }
+          tasks.unshift(newTask)
+          S.set('mem_tasks', tasks)
+          if(window.AndroidBridge) try{ AndroidBridge.saveTasks(JSON.stringify(tasks)) }catch(e){}
+          renderTasks()
+          renderCal()
+          toast('✅ Salvo e adicionado às tarefas!')
+        } else {
+          // Atualiza tarefa existente
+          existingTask.dueDate = dd
+          existingTask.priority = curReviewPrio
+          existingTask.description = cur.description || (note ? '💬 '+note : '')
+          S.set('mem_tasks', tasks)
+          if(window.AndroidBridge) try{ AndroidBridge.saveTasks(JSON.stringify(tasks)) }catch(e){}
+          renderTasks()
+          renderCal()
+          toast('✅ Salvo e tarefa atualizada!')
+        }
+      } else {
+        toast('✅ Solicitação salva!')
+      }
+      close1('reqMod')
+    })
     .catch(()=>toast('❌ Erro ao salvar. Verifique conexão.'))
 }
 
