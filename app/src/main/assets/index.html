@@ -1922,6 +1922,12 @@ if(window.AndroidBridge){ syncTasksToAndroid() }
 if(S.get('mem_notif_asked',false)&&typeof Notification!=='undefined'&&Notification.permission==='granted'){
   document.getElementById('notifBtn').classList.add('lit')
 }
+// Save FCM token to Firebase DB so Cloud Function can send push notifications
+function saveFcmToken(token){
+  if(!fbDb || !token) return
+  fbDb.ref('owner/fcmToken').set(token).catch(()=>{})
+}
+
 // Start listening to all contacts' Firebase requests
 subscribeAllContacts()
 

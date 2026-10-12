@@ -1,0 +1,12 @@
+{
+  "name": "memora-functions",
+  "description": "Firebase Cloud Functions for Memora",
+  "scripts": {
+    "deploy": "firebase deploy --only functions"
+  },
+  "engines": { "node": "18" },
+  "dependencies": {
+    "firebase-admin": "^11.11.0",
+    "firebase-functions": "^4.5.0"
+  }
+}

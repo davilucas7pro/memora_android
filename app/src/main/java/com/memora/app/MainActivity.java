@@ -71,6 +71,33 @@ public class MainActivity extends AppCompatActivity {
         }, "AndroidBridge");
 
         web.loadUrl("file:///android_asset/index.html");
+
+        // After page loads, push FCM token to Firebase via JS bridge
+        web.setWebViewClient(new android.webkit.WebViewClient() {
+            @Override
+            public void onPageFinished(android.webkit.WebView view, String url) {
+                pushFcmTokenToFirebase(view);
+            }
+        });
+    }
+
+    private void pushFcmTokenToFirebase(WebView web) {
+        // Try stored token first
+        String stored = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString("fcm_token", null);
+        if (stored != null) {
+            String js = "javascript:saveFcmToken('" + stored.replace("'", "\\'") + "')";
+            web.post(() -> web.evaluateJavascript(js, null));
+            return;
+        }
+        // Request fresh token
+        com.google.firebase.messaging.FirebaseMessaging.getInstance().getToken()
+            .addOnSuccessListener(token -> {
+                getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                    .edit().putString("fcm_token", token).apply();
+                String js = "javascript:saveFcmToken('" + token.replace("'", "\\'") + "')";
+                web.post(() -> web.evaluateJavascript(js, null));
+            });
     }
 
     private void requestNotificationPermission() {
