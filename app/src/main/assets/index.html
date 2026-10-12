@@ -1464,6 +1464,8 @@ function saveContact(){
   contacts.unshift(contact)
   S.set('mem_contacts', contacts)
   if(window.AndroidBridge) try{AndroidBridge.saveContacts(JSON.stringify(contacts))}catch(e){}
+  // Persist contact name to Firebase so the contact form can read it
+  if(fbDb) fbDb.ref('contacts/'+token).set({name}).catch(()=>{})
   close1('contactMod')
   subscribeContact(contact)
   renderContacts()
@@ -1479,6 +1481,7 @@ function delContact(id){
     }
     // Remove data from firebase
     if(fbDb) fbDb.ref('requests/'+c.token).remove().catch(()=>{})
+    if(fbDb) fbDb.ref('contacts/'+c.token).remove().catch(()=>{})
     delete allRequests[c.token]
     contacts = contacts.filter(x=>x.id!==id)
     S.set('mem_contacts', contacts)
