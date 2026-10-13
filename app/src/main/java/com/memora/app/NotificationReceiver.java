@@ -23,72 +23,96 @@ public class NotificationReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         createChannel(context);
         checkAndNotify(context);
+        // Reschedule next exact alarm so checks keep running in background
+        MainActivity.rescheduleAlarm(context);
     }
 
     private void checkAndNotify(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        String tasksJson = prefs.getString("tasks", "[]");
-        String lastNJson = prefs.getString("lastN", "{}");
-        String settingsJson = prefs.getString("settings", "{\"alta\":2,\"media\":5,\"baixa\":10}");
+        String tasksJson   = prefs.getString("tasks",   "[]");
+        String notifTsJson = prefs.getString("notifTs", "{}");  // unified timestamps (JS+Java)
+        String settingsJson = prefs.getString("settings", "{}");
 
-        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-        String nowTime = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
-        long now = System.currentTimeMillis();
+        String today   = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+        String nowTime = new SimpleDateFormat("HH:mm",      Locale.getDefault()).format(new Date());
+        long   nowMs   = System.currentTimeMillis();
 
         try {
-            JSONArray tasks = new JSONArray(tasksJson);
-            JSONObject lastN = new JSONObject(lastNJson);
-            JSONObject settings = new JSONObject(settingsJson);
+            JSONArray  tasks   = new JSONArray(tasksJson);
+            JSONObject notifTs = new JSONObject(notifTsJson);
+            JSONObject cfg     = new JSONObject(settingsJson);
 
-            // Intervals in milliseconds per priority
-            long gapAlta  = settings.optLong("alta",  2)  * 60 * 1000L;
-            long gapMedia = settings.optLong("media", 5)  * 60 * 1000L;
-            long gapBaixa = settings.optLong("baixa", 10) * 60 * 1000L;
+            // Helper: parse notifCfg entry — supports BOTH formats:
+            //   old: { "alta": 2 }           → {type:"min", value:2}
+            //   new: { "alta": {type:"min", value:2} }
+            long[] gaps = parseGaps(cfg);   // [alta, media, baixa, custom]
 
             NotificationManager nm = (NotificationManager)
                 context.getSystemService(Context.NOTIFICATION_SERVICE);
-            int notifId = (int)(now / 1000);
+            int notifId = (int)(nowMs / 1000);
+            boolean changed = false;
 
             for (int i = 0; i < tasks.length(); i++) {
                 JSONObject t = tasks.getJSONObject(i);
                 if (t.optBoolean("completed", false)) continue;
 
+                String id      = t.optString("id", "");
                 String dueDate = t.optString("dueDate", "");
-                if (dueDate.isEmpty()) continue;
-
-                boolean dateOk = dueDate.compareTo(today) <= 0;
                 String dueTime = t.optString("dueTime", "");
-                boolean timeOk = dueTime.isEmpty()
-                    || dueDate.compareTo(today) < 0
-                    || (dueDate.equals(today) && dueTime.compareTo(nowTime) <= 0);
 
-                if (!dateOk || !timeOk) continue;
-
-                // Determine gap based on priority (supports both pt and en values)
-                String priority = t.optString("priority", "med").toLowerCase();
-                long gap;
-                if (priority.equals("alta") || priority.equals("high")) {
-                    gap = gapAlta;
-                } else if (priority.equals("baixa") || priority.equals("low")) {
-                    gap = gapBaixa;
+                // ── Determine startMs: when notifications should begin ──
+                long startMs;
+                if (!dueDate.isEmpty() && dueDate.compareTo(today) < 0) {
+                    // Overdue — notify immediately
+                    startMs = 0;
+                } else if ((!dueDate.isEmpty() && dueDate.equals(today)) || dueDate.isEmpty()) {
+                    // Today or no date
+                    if (!dueTime.isEmpty()) {
+                        // Has specific time — start at that time today
+                        startMs = parseTimeToday(today, dueTime);
+                    } else {
+                        // No time — start from when task was saved (createdAt)
+                        startMs = t.optLong("createdAt", 0);
+                    }
                 } else {
-                    gap = gapMedia;
+                    // Future date with no time — start from createdAt
+                    if (!dueTime.isEmpty()) {
+                        // Future date + time — wait until that exact moment
+                        startMs = parseTimeOnDate(dueDate, dueTime);
+                    } else {
+                        startMs = t.optLong("createdAt", 0);
+                    }
                 }
 
-                String id = t.optString("id", "");
-                long last = lastN.optLong(id, 0);
-                if (now - last < gap) continue;
+                if (nowMs < startMs) continue; // not yet time
 
-                boolean overdue = dueDate.compareTo(today) < 0;
-                String title = "⏰ Memo Build — " + (overdue ? "Tarefa Atrasada" : "Tarefa Pendente");
-                String body = t.optString("title", "");
-                String desc = t.optString("description", "");
+                // ── Get gap for this priority ──
+                String priority = t.optString("priority", "med").toLowerCase();
+                String cfgKey = priority.equals("high") || priority.equals("alta") ? "alta" :
+                                priority.equals("low")  || priority.equals("baixa") ? "baixa" :
+                                priority.equals("custom") ? "custom" : "media";
+
+                long gap = getGap(cfg, cfgKey, gaps);
+
+                // ── Check last notification time ──
+                long last = notifTs.optLong(id, 0);
+                boolean shouldFire;
+                if (last == 0) {
+                    shouldFire = true; // never notified — fire immediately
+                } else {
+                    shouldFire = (nowMs - last) >= gap;
+                }
+
+                if (!shouldFire) continue;
+
+                // ── Build and send notification ──
+                boolean overdue = !dueDate.isEmpty() && dueDate.compareTo(today) < 0;
+                String label = overdue        ? "Tarefa Atrasada" :
+                               dueDate.equals(today) ? "Tarefa para Hoje" : "Tarefa Pendente";
+                String title = "⏰ Memo Build — " + label;
+                String body  = t.optString("title", "Tarefa");
+                String desc  = t.optString("description", "");
                 if (!desc.isEmpty()) body += "\n" + desc;
-
-                // Priority label in notification
-                String prioLabel = (priority.equals("alta") || priority.equals("high")) ? "🔴 Alta" :
-                                   (priority.equals("baixa") || priority.equals("low")) ? "🟢 Baixa" : "🟡 Média";
-                body += "\nPrioridade: " + prioLabel;
 
                 NotificationCompat.Builder builder =
                     new NotificationCompat.Builder(context, CHANNEL_ID)
@@ -100,14 +124,70 @@ public class NotificationReceiver extends BroadcastReceiver {
                         .setAutoCancel(true);
 
                 nm.notify(notifId++, builder.build());
-                lastN.put(id, now);
+                notifTs.put(id, nowMs);
+                changed = true;
             }
 
-            prefs.edit().putString("lastN", lastN.toString()).apply();
+            if (changed) {
+                prefs.edit().putString("notifTs", notifTs.toString()).apply();
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /** Parse notifCfg for all priority keys, returning [alta, media, baixa, custom] in ms */
+    private long[] parseGaps(JSONObject cfg) {
+        return new long[]{
+            getGap(cfg, "alta",   null),
+            getGap(cfg, "media",  null),
+            getGap(cfg, "baixa",  null),
+            getGap(cfg, "custom", null)
+        };
+    }
+
+    /** Get gap in ms for a cfgKey, handling both old (number) and new (object) formats */
+    private long getGap(JSONObject cfg, String key, long[] cached) {
+        long defaultMin = key.equals("alta") ? 2 : key.equals("baixa") ? 10 : key.equals("custom") ? 15 : 5;
+        try {
+            Object val = cfg.opt(key);
+            if (val == null) return defaultMin * 60 * 1000L;
+            if (val instanceof Number) {
+                // Old format: { "alta": 2 }
+                long minutes = ((Number) val).longValue();
+                return Math.max(1, minutes) * 60 * 1000L;
+            }
+            if (val instanceof JSONObject) {
+                // New format: { "alta": { "type": "min", "value": 2 } }
+                JSONObject entry = (JSONObject) val;
+                String type = entry.optString("type", "min");
+                if ("min".equals(type)) {
+                    long minutes = entry.optLong("value", defaultMin);
+                    return Math.max(1, minutes) * 60 * 1000L;
+                } else {
+                    // "time" mode — fire once per day; use 24h gap as the interval
+                    return 24 * 60 * 60 * 1000L;
+                }
+            }
+        } catch (Exception e) { /* fall through */ }
+        return defaultMin * 60 * 1000L;
+    }
+
+    /** Parse "HH:mm" time string on today's date into epoch ms */
+    private long parseTimeToday(String today, String hhmm) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+            return sdf.parse(today + " " + hhmm).getTime();
+        } catch (Exception e) { return 0; }
+    }
+
+    /** Parse "HH:mm" time on a specific date into epoch ms */
+    private long parseTimeOnDate(String date, String hhmm) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+            return sdf.parse(date + " " + hhmm).getTime();
+        } catch (Exception e) { return 0; }
     }
 
     static void createChannel(Context context) {

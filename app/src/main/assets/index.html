@@ -1138,7 +1138,20 @@ function migrateNotifCfg(raw){
   return raw
 }
 let notifCfg = migrateNotifCfg(S.get('mem_notif_cfg', null))
-let notifTs  = S.get('mem_notif_ts', {})
+// Load notifTs: merge localStorage + Java SharedPreferences (authoritative for background fires)
+let notifTs = (function(){
+  const local = S.get('mem_notif_ts', {})
+  if(window.AndroidBridge){
+    try{
+      const java = JSON.parse(AndroidBridge.getNotifTs()||'{}')
+      // Merge: keep the LATER timestamp per task (most recent fire wins)
+      for(const k of Object.keys(java)){
+        if(!local[k]||java[k]>local[k]) local[k]=java[k]
+      }
+    }catch(e){}
+  }
+  return local
+})()
 
 // All requests from Firebase: { [token]: { [reqId]: reqObj } }
 let allRequests = {}
@@ -2077,7 +2090,11 @@ function checkNotifs(){
       changed = true
     }
   })
-  if(changed) S.set('mem_notif_ts',notifTs)
+  if(changed){
+    S.set('mem_notif_ts',notifTs)
+    // Sync to Java SharedPreferences so AlarmManager background checks stay in sync
+    if(window.AndroidBridge) try{ AndroidBridge.saveNotifTs(JSON.stringify(notifTs)) }catch(e){}
+  }
 }
 
 /* ── TOAST ── */

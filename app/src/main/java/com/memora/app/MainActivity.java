@@ -87,6 +87,19 @@ public class MainActivity extends AppCompatActivity {
                 prefs.edit().putString("contacts", contactsJson).apply();
             }
 
+            @JavascriptInterface
+            public void saveNotifTs(String notifTsJson) {
+                // Shared notification timestamps — read by both JS and Java alarm
+                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                prefs.edit().putString("notifTs", notifTsJson).apply();
+            }
+
+            @JavascriptInterface
+            public String getNotifTs() {
+                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                return prefs.getString("notifTs", "{}");
+            }
+
         }, "AndroidBridge");
 
         web.loadUrl("file:///android_asset/index.html");
@@ -146,10 +159,37 @@ public class MainActivity extends AppCompatActivity {
             PendingIntent pi = PendingIntent.getBroadcast(this, 0, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-            long interval = 2 * 60 * 1000L;
-            long triggerAt = System.currentTimeMillis() + interval;
+            // Use setExact for precise timing; NotificationReceiver reschedules itself each fire
+            long triggerAt = System.currentTimeMillis() + 60 * 1000L; // first check in 1 min
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !am.canScheduleExactAlarms()) {
+                // Fallback if exact alarm permission not granted
+                am.setInexactRepeating(AlarmManager.RTC_WAKEUP, triggerAt, 2 * 60 * 1000L, pi);
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi);
+            } else {
+                am.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pi);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-            am.setInexactRepeating(AlarmManager.RTC_WAKEUP, triggerAt, interval, pi);
+    // Called by NotificationReceiver to reschedule the next check
+    static void rescheduleAlarm(Context context) {
+        try {
+            AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+            Intent intent = new Intent(context, NotificationReceiver.class);
+            PendingIntent pi = PendingIntent.getBroadcast(context, 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+            long triggerAt = System.currentTimeMillis() + 60 * 1000L; // next check in 1 min
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !am.canScheduleExactAlarms()) {
+                am.set(AlarmManager.RTC_WAKEUP, triggerAt, pi);
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi);
+            } else {
+                am.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pi);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
