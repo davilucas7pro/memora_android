@@ -1448,7 +1448,14 @@ function saveTask(){
   }
   if(editTaskId){
     const i=tasks.findIndex(x=>x.id===editTaskId)
-    if(i!==-1){ tasks[i]={...tasks[i],...td,id:editTaskId}; delete lastN[editTaskId] }
+    if(i!==-1){
+      // Preserve original createdAt; reset notification timestamp so timing restarts
+      const orig = tasks[i]
+      tasks[i]={...orig,...td,id:editTaskId,createdAt:orig.createdAt||td.createdAt}
+      delete lastN[editTaskId]
+      delete notifTs[editTaskId]
+      S.set('mem_notif_ts',notifTs)
+    }
   } else {
     tasks.unshift({...td,id:uid()})
   }
@@ -1456,8 +1463,8 @@ function saveTask(){
   syncTasksToAndroid()
   close1('taskMod'); renderTasks(); renderCalDay()
   toast(editTaskId?'Tarefa atualizada!':'Tarefa criada! 🎯')
-  // Immediately check notifications so first alert fires right away
-  setTimeout(checkNotifs, 500)
+  // Immediately check notifications — clear debounce so it always runs after save
+  setTimeout(()=>{ checkNotifs._last=0; checkNotifs() }, 500)
 }
 function togTask(id){
   const t=tasks.find(x=>x.id===id); if(!t) return
@@ -2009,67 +2016,65 @@ function sendNotif(title, body){
   }
 }
 function checkNotifs(){
+  // Debounce: prevent double-fires from rapid calls (visibilitychange + setInterval overlap)
+  const _now = Date.now()
+  if(checkNotifs._last && _now - checkNotifs._last < 5000) return
+  checkNotifs._last = _now
+
   const hasAndroid=!!window.AndroidBridge
   const hasWeb=typeof Notification!=='undefined'&&Notification.permission==='granted'
   if(!hasAndroid&&!hasWeb) return
-  const today=todayStr(), now=nowTime(), nowMs=Date.now()
+
+  const today=todayStr(), now=nowTime(), nowMs=_now
   let changed=false
+
   tasks.forEach(t=>{
     if(t.completed) return
 
-    // Determine when notifications should start for this task
-    let startMs = null
-    if(t.dueDate){
-      if(t.dueDate < today){
-        // Overdue — notify immediately
-        startMs = 0
-      } else if(t.dueDate === today){
-        if(t.dueTime){
-          // Has specific time today — start from that time
-          startMs = new Date(today+'T'+t.dueTime+':00').getTime()
-        } else {
-          // Due today, no time — start from when task was created (or saved)
-          startMs = t.createdAt||0
-        }
-      } else {
-        return // future date — skip
-      }
+    // ── Determine startMs: when this task's notifications should begin ──
+    let startMs
+    if(t.dueDate && t.dueDate < today){
+      // Overdue — notify right away
+      startMs = 0
+    } else if((t.dueDate === today || !t.dueDate) && t.dueTime){
+      // Has a specific time (with or without date) — start AT that time today
+      startMs = new Date(today+'T'+t.dueTime+':00').getTime()
     } else {
-      // No due date — notify from when the task was created
-      startMs = t.createdAt||0
+      // No time, any date (future, today, or none) — start from when task was saved
+      startMs = t.createdAt || 0
     }
 
-    if(nowMs < startMs) return // not yet time to start notifying
+    if(nowMs < startMs) return // not yet reached the start time
 
-    // Map task priority to notifCfg key
     const cfgKey = t.priority==='high'?'alta':t.priority==='low'?'baixa':t.priority==='custom'?'custom':'media'
     const cfg = notifCfg[cfgKey]||{type:'min',value:5}
     const last = notifTs[t.id]||0
-    let shouldFire=false
+    let shouldFire = false
+
     if(cfg.type==='time'){
-      // Fire once per day at the configured time (HH:MM)
-      const hm=String(cfg.value||'09:00')
-      if(now>=hm){
-        const todayAtTime=new Date(today+'T'+hm+':00').getTime()
-        shouldFire=last<todayAtTime
+      // Fire once per day at the configured fixed time
+      const hm = String(cfg.value||'09:00')
+      if(now >= hm){
+        const todayAtTime = new Date(today+'T'+hm+':00').getTime()
+        shouldFire = last < todayAtTime
       }
     } else {
-      // Interval mode — gap in minutes
-      // If never notified (last===0), fire immediately on first check
-      if(last===0){
-        shouldFire=true
+      // Interval mode
+      if(last === 0){
+        // Never notified — fire on the very first check after startMs
+        shouldFire = true
       } else {
-        const gapMs=Math.max(1,parseInt(cfg.value)||5)*60*1000
-        shouldFire=nowMs-last>=gapMs
+        const gapMs = Math.max(1, parseInt(cfg.value)||5) * 60 * 1000
+        shouldFire = nowMs - last >= gapMs
       }
     }
+
     if(shouldFire){
-      const ov=t.dueDate && t.dueDate<today
-      const label=ov?'Tarefa Atrasada':t.dueDate===today?'Tarefa para Hoje':'Tarefa Pendente'
-      sendNotif('⏰ Memo Build — '+label,
-        t.title+(t.description?'\n'+t.description:''))
-      notifTs[t.id]=nowMs
-      changed=true
+      const ov = t.dueDate && t.dueDate < today
+      const label = ov?'Tarefa Atrasada': t.dueDate===today?'Tarefa para Hoje':'Tarefa Pendente'
+      sendNotif('⏰ Memo Build — '+label, t.title+(t.description?'\n'+t.description:''))
+      notifTs[t.id] = nowMs
+      changed = true
     }
   })
   if(changed) S.set('mem_notif_ts',notifTs)
