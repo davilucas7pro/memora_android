@@ -29,9 +29,10 @@ public class NotificationReceiver extends BroadcastReceiver {
 
     private void checkAndNotify(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        String tasksJson   = prefs.getString("tasks",   "[]");
-        String notifTsJson = prefs.getString("notifTs", "{}");  // unified timestamps (JS+Java)
+        String tasksJson    = prefs.getString("tasks",    "[]");
+        String notifTsJson  = prefs.getString("notifTs",  "{}");
         String settingsJson = prefs.getString("settings", "{}");
+        String requestsJson = prefs.getString("pipelineRequests", "[]"); // saved by JS bridge
 
         String today   = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
         String nowTime = new SimpleDateFormat("HH:mm",      Locale.getDefault()).format(new Date());
@@ -132,6 +133,90 @@ public class NotificationReceiver extends BroadcastReceiver {
                 prefs.edit().putString("notifTs", notifTs.toString()).apply();
             }
 
+            // ── Check pipeline requests SLA ──
+            checkRequestSla(context, requestsJson, notifTs, notifId, nowMs, nm);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void checkRequestSla(Context context, String requestsJson, JSONObject notifTs,
+                                  int baseNotifId, long nowMs, NotificationManager nm) {
+        // SLA thresholds per order type (alertMs, slaMs)
+        // urg1_retira: 5min/10min | nao_em_loja: 8/15 | entrega_2h: 10/20 | entrega_dia: 20/40
+        long[][] slaConfig = {
+            {  5*60*1000L, 10*60*1000L }, // urg1_retira
+            {  8*60*1000L, 15*60*1000L }, // nao_em_loja
+            { 10*60*1000L, 20*60*1000L }, // entrega_2h
+            { 20*60*1000L, 40*60*1000L }  // entrega_dia
+        };
+        String[] tipoKeys = { "urg1_retira", "nao_em_loja", "entrega_2h", "entrega_dia" };
+        String[] tipoNames = { "Ret. Urg.1", "Não em Loja", "Entrega 2h", "Entrega Dia" };
+        // Active statuses where SLA runs
+        java.util.Set<String> slaStatuses = new java.util.HashSet<>(java.util.Arrays.asList(
+            "pedido_pronto","em_coleta","validar_alteracao","alterar_pedido","em_expedicao"
+        ));
+        java.util.Map<String,String> statusNames = new java.util.HashMap<>();
+        statusNames.put("pedido_pronto",     "Pedido Pronto");
+        statusNames.put("em_coleta",         "Em Coleta");
+        statusNames.put("validar_alteracao", "Validar Alteração");
+        statusNames.put("alterar_pedido",    "Alterar Pedido");
+        statusNames.put("em_expedicao",      "Em Expedição");
+
+        boolean changed = false;
+        try {
+            JSONArray reqs = new JSONArray(requestsJson);
+            for (int i = 0; i < reqs.length(); i++) {
+                JSONObject r = reqs.getJSONObject(i);
+                String reqId  = r.optString("id", "");
+                String status = r.optString("status", "");
+                String tipo   = r.optString("tipo", "");
+                if (!slaStatuses.contains(status) || tipo.isEmpty()) continue;
+
+                // Find SLA config for this tipo
+                long alertMs = -1, slaMs = -1;
+                String tipoName = tipo;
+                for (int j = 0; j < tipoKeys.length; j++) {
+                    if (tipoKeys[j].equals(tipo)) {
+                        alertMs = slaConfig[j][0];
+                        slaMs   = slaConfig[j][1];
+                        tipoName = tipoNames[j];
+                        break;
+                    }
+                }
+                if (alertMs < 0) continue; // entrega_outro_dia or unknown = skip
+
+                long changedAt = r.optLong("statusChangedAt", r.optLong("createdAt", 0));
+                long elapsed   = nowMs - changedAt;
+                String slaKey  = "sla_" + reqId;
+                long lastFired = notifTs.optLong(slaKey, 0);
+
+                if (elapsed >= alertMs && lastFired < changedAt) {
+                    long elMin   = elapsed / 60000;
+                    long slaMin  = slaMs  / 60000;
+                    boolean breach = elapsed >= slaMs;
+                    String sName = statusNames.containsKey(status) ? statusNames.get(status) : status;
+                    String title = breach ? "🔴 SLA Estourado! " + tipoName : "⚠️ Pedido Parado — " + tipoName;
+                    String body  = "\"" + r.optString("title","Pedido") + "\" — " + sName
+                                 + " há " + elMin + " min (SLA: " + slaMin + " min)";
+                    NotificationCompat.Builder builder =
+                        new NotificationCompat.Builder(context, CHANNEL_ID)
+                            .setSmallIcon(android.R.drawable.ic_dialog_alert)
+                            .setContentTitle(title)
+                            .setContentText(body)
+                            .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
+                            .setPriority(NotificationCompat.PRIORITY_HIGH)
+                            .setAutoCancel(true);
+                    nm.notify(baseNotifId + 1000 + i, builder.build());
+                    notifTs.put(slaKey, changedAt); // mark fired for this status entry
+                    changed = true;
+                }
+            }
+            if (changed) {
+                context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                    .edit().putString("notifTs", notifTs.toString()).apply();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

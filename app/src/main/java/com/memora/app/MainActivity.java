@@ -100,6 +100,13 @@ public class MainActivity extends AppCompatActivity {
                 return prefs.getString("notifTs", "{}");
             }
 
+            @JavascriptInterface
+            public void savePipelineRequests(String reqJson) {
+                // Active pipeline requests for background SLA alarm checks
+                SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                prefs.edit().putString("pipelineRequests", reqJson).apply();
+            }
+
         }, "AndroidBridge");
 
         web.loadUrl("file:///android_asset/index.html");

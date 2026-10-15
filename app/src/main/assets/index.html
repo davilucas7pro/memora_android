@@ -719,6 +719,83 @@ body {
 .req-chip.high { background: var(--danger-dim); color: var(--danger); border-color: transparent }
 .req-chip.med  { background: var(--warn-dim);   color: var(--warn);   border-color: transparent }
 .req-chip.low  { background: var(--info-dim);   color: var(--info);   border-color: transparent }
+.req-chip.custom { background: var(--accent-dim); color: var(--accent-2); border-color: transparent }
+
+/* ── Pipeline status card colors ── */
+.req-card.em_pedido        { border-left: 3px solid var(--border-2) }
+.req-card.pedido_pronto    { border-left: 3px solid var(--success) }
+.req-card.em_coleta        { border-left: 3px solid var(--info) }
+.req-card.validar_alteracao{ border-left: 3px solid var(--warn) }
+.req-card.alterar_pedido   { border-left: 3px solid var(--danger) }
+.req-card.coletado         { border-left: 3px solid var(--accent-2) }
+.req-card.em_expedicao     { border-left: 3px solid var(--purple) }
+/* SLA warning: laranja pulsando = alerta; vermelho = breach */
+.req-card.sla-warn         { border-left: 3px solid #f59e0b !important; animation: pulse-sla 1.8s ease-in-out infinite }
+.req-card.sla-breach       { border-left: 3px solid var(--danger) !important; animation: pulse-sla 0.9s ease-in-out infinite }
+@keyframes pulse-sla { 0%,100%{opacity:1} 50%{opacity:.55} }
+
+/* ── Pipeline status pills ── */
+.pill-em_pedido        { background: var(--surface-2); color: var(--text-muted) }
+.pill-pedido_pronto    { background: var(--success-dim); color: var(--success) }
+.pill-em_coleta        { background: var(--info-dim); color: var(--info) }
+.pill-validar_alteracao{ background: var(--warn-dim); color: var(--warn) }
+.pill-alterar_pedido   { background: var(--danger-dim); color: var(--danger) }
+.pill-coletado         { background: var(--accent-dim); color: var(--accent-2) }
+.pill-em_expedicao     { background: var(--purple-dim); color: var(--purple) }
+.pill-sla-warn         { background: #fef3c7; color: #92400e }
+
+/* ── Gerencial tab ── */
+.ger-section { margin-bottom: 20px }
+.ger-section-title { font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--text-muted); padding: 0 16px 8px }
+.ger-empty { text-align: center; padding: 48px 24px; color: var(--text-muted); font-size: 14px }
+.ger-card {
+  margin: 0 16px 8px; padding: 12px 14px; border-radius: var(--r);
+  background: var(--surface); border: 1px solid var(--border);
+  border-left: 3px solid var(--border-2); cursor: pointer;
+}
+.ger-card.ok     { border-left-color: var(--success) }
+.ger-card.warn   { border-left-color: #f59e0b; animation: pulse-sla 1.8s ease-in-out infinite }
+.ger-card.breach { border-left-color: var(--danger); animation: pulse-sla 0.9s ease-in-out infinite }
+.ger-row  { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px }
+.ger-name { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; min-width: 0 }
+.ger-time { font-size: 13px; font-weight: 700; flex-shrink: 0 }
+.ger-time.ok     { color: var(--success) }
+.ger-time.warn   { color: #f59e0b }
+.ger-time.breach { color: var(--danger) }
+.ger-meta { font-size: 11px; color: var(--text-muted); margin-top: 4px }
+.ger-sla-bar { height: 3px; border-radius: 2px; background: var(--surface-2); margin-top: 8px; overflow: hidden }
+.ger-sla-fill { height: 100%; border-radius: 2px; transition: width .3s }
+.ger-notif-time { font-size: 11px; color: var(--text-muted); margin-top: 3px }
+
+/* ── Status pipeline selector in modal ── */
+.pipeline-scroll { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none }
+.pipeline-scroll::-webkit-scrollbar { display: none }
+.pipeline-btn {
+  flex-shrink: 0; padding: 5px 11px; border-radius: 20px;
+  border: 1.5px solid var(--border); background: var(--surface-2);
+  color: var(--text-muted); font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: inherit; white-space: nowrap; transition: all .15s;
+}
+.pipeline-btn.on { border-color: transparent; color: #fff }
+.pipeline-btn.on.em_pedido     { background: var(--text-muted) }
+.pipeline-btn.on.pedido_pronto { background: var(--success) }
+.pipeline-btn.on.em_coleta     { background: var(--info) }
+.pipeline-btn.on.validar_alteracao { background: var(--warn) }
+.pipeline-btn.on.alterar_pedido{ background: var(--danger) }
+.pipeline-btn.on.coletado      { background: var(--accent-2) }
+.pipeline-btn.on.em_expedicao  { background: var(--purple) }
+.pipeline-btn.on.concluida     { background: var(--success) }
+
+/* ── Tipo selector ── */
+.tipo-row { display: flex; flex-wrap: wrap; gap: 6px }
+.tipo-btn {
+  flex: 1 1 auto; min-width: 0; padding: 6px 8px; border-radius: var(--r);
+  border: 1.5px solid var(--border); background: var(--surface-2);
+  color: var(--text-muted); font-size: 11px; font-weight: 700;
+  cursor: pointer; font-family: inherit; text-align: center; transition: all .15s;
+}
+.tipo-btn.on { border-color: var(--accent); background: var(--accent-dim); color: var(--accent-2) }
+
 .contact-name-tag {
   font-size: 11px; font-weight: 600; padding: 2px 7px;
   border-radius: 20px; background: var(--accent-dim); color: var(--accent-2);
@@ -850,6 +927,18 @@ body {
       <div id="contactList" class="list"></div>
     </div>
 
+    <!-- GERENCIAL TAB -->
+    <div class="tab" id="tab-gerencial">
+      <div class="sec-head">
+        <h1 class="sec-title">Gerencial</h1>
+        <button class="add-btn" style="padding:6px 11px;font-size:13px" onclick="renderGerencial()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Atualizar
+        </button>
+      </div>
+      <div id="gerList" style="padding-bottom:40px"></div>
+    </div>
+
     <!-- CONTACT DETAIL PANEL (slide-in) -->
     <div id="contactPanel" class="contact-panel">
       <div class="contact-panel-head">
@@ -887,6 +976,11 @@ body {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
       <span class="nav-label">Links</span>
       <div class="nav-badge" id="linksBadge">0</div>
+    </button>
+    <button class="nav-it" onclick="goTab('gerencial',this)" id="gerencialNav">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span class="nav-label">Gerencial</span>
+      <div class="nav-pip" id="gerPip" style="display:none"></div>
     </button>
   </nav>
 
@@ -1156,9 +1250,11 @@ let notifTs = (function(){
 // All requests from Firebase: { [token]: { [reqId]: reqObj } }
 let allRequests = {}
 let reqListeners = {} // token -> firebase listener ref
-let curReviewToken = null
-let curReviewId    = null
-let curReviewPrio  = null
+let curReviewToken  = null
+let curReviewId     = null
+let curReviewPrio   = null
+let curReviewStatus = null
+let curReviewTipo   = null
 let reqFilter = 'all'
 let curPanelToken = null
 let panelFilter = 'all'
@@ -1216,6 +1312,7 @@ function goTab(id,btn){
   btn.classList.add('on')
   if(id==='cal') renderCal()
   if(id==='links') renderContacts()
+  if(id==='gerencial') renderGerencial()
 }
 function setF(f,btn){
   filter=f
@@ -1658,9 +1755,12 @@ function subscribeContact(contact){
     const val = snap.val() || {}
     allRequests[contact.token] = val
     updateLinksBadge()
+    syncPipelineRequestsToAndroid()
     // Re-render contacts list and panel if open
     if(document.getElementById('tab-links').classList.contains('on')) renderContacts()
     if(curPanelToken === contact.token) renderPanelRequests()
+    // Re-render gerencial if open
+    if(document.getElementById('tab-gerencial').classList.contains('on')) renderGerencial()
     // Notify on new requests
     if(seenIds === null){
       // First load: just record existing IDs, no notifications
@@ -1692,11 +1792,29 @@ function subscribeAllContacts(){
   }
 }
 
+// Flatten active pipeline requests to SharedPrefs so background alarm can check SLA
+function syncPipelineRequestsToAndroid(){
+  if(!window.AndroidBridge) return
+  try {
+    const active = []
+    const slaActive = ['pedido_pronto','em_coleta','validar_alteracao','alterar_pedido','em_expedicao']
+    Object.entries(allRequests).forEach(([token, reqs])=>{
+      if(!reqs) return
+      Object.entries(reqs).forEach(([id, r])=>{
+        if(slaActive.includes(r.status) && r.tipo && r.tipo !== 'entrega_outro_dia'){
+          active.push({id, ...r})
+        }
+      })
+    })
+    AndroidBridge.savePipelineRequests(JSON.stringify(active))
+  } catch(e){}
+}
+
 function updateLinksBadge(){
   let newCount = 0
   contacts.forEach(c=>{
     const reqs = allRequests[c.token] || {}
-    Object.values(reqs).forEach(r=>{ if(r.status==='nova') newCount++ })
+    Object.values(reqs).forEach(r=>{ if(r.status==='nova'||r.status==='em_pedido'||!r.status) newCount++ })
   })
   const badge = document.getElementById('linksBadge')
   if(newCount > 0){
@@ -1767,11 +1885,36 @@ function setPanelFilter(f, btn){
   renderPanelRequests()
 }
 
+const PIPELINE_STATUSES = ['em_pedido','pedido_pronto','em_coleta','validar_alteracao','alterar_pedido','coletado','em_expedicao','concluida']
+const STATUS_LABELS = {
+  em_pedido:'Em Pedido', pedido_pronto:'Pedido Pronto', em_coleta:'Em Coleta',
+  validar_alteracao:'Validar Alteração', alterar_pedido:'Alterar Pedido',
+  coletado:'Coletado', em_expedicao:'Em Expedição', concluida:'Concluída',
+  // Legacy
+  nova:'Em Pedido', pendente:'Em Pedido', atrasada:'Em Pedido'
+}
+const TIPO_LABELS = {
+  urg1_retira:'🚀 Ret. Urg.1', nao_em_loja:'🏪 Não em Loja',
+  entrega_2h:'⚡ Entrega 2h', entrega_dia:'📦 Entrega Dia',
+  entrega_outro_dia:'🗓️ Outro Dia'
+}
+// SLA: { alertMs, slaMs } — null = sem SLA
+const TIPO_SLA = {
+  urg1_retira:    { alertMs:  5*60000, slaMs: 10*60000 },
+  nao_em_loja:    { alertMs:  8*60000, slaMs: 15*60000 },
+  entrega_2h:     { alertMs: 10*60000, slaMs: 20*60000 },
+  entrega_dia:    { alertMs: 20*60000, slaMs: 40*60000 },
+  entrega_outro_dia: null
+}
+// Statuses where SLA clock runs
+const SLA_ACTIVE_STATUSES = new Set(['pedido_pronto','em_coleta','validar_alteracao','alterar_pedido','em_expedicao'])
+
 function getReqVisualStatus(r){
-  if(r.status === 'concluida') return 'concluida'
-  if(r.dueDate && r.dueDate < todayStr()) return 'atrasada'
-  if(r.status === 'pendente') return 'pendente'
-  return r.status || 'nova'
+  const s = r.status || 'em_pedido'
+  if(PIPELINE_STATUSES.includes(s)) return s
+  // Legacy map
+  if(s === 'concluida') return 'concluida'
+  return 'em_pedido'
 }
 
 function renderPanelRequests(){
@@ -1780,26 +1923,36 @@ function renderPanelRequests(){
   const reqs = allRequests[curPanelToken] || {}
   let list = Object.entries(reqs).map(([id,r])=>({...r,id}))
   list.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0))
-  if(panelFilter === 'nova') list = list.filter(r=>r.status==='nova')
+  if(panelFilter === 'nova') list = list.filter(r=>r.status==='nova'||r.status==='em_pedido'||!r.status)
 
-  const statusLabel = s=>({nova:'Nova',pendente:'Pendente',atrasada:'Atrasada',concluida:'Concluída'}[s]||s)
   const prioLabel = p=>({high:'🔴 Alta',med:'🟡 Média',low:'🔵 Baixa',custom:'⭐ Custom'}[p]||'')
 
   if(!list.length){
     el.innerHTML=`<div class="empty"><div class="empty-ico">📭</div><div class="empty-t">Nenhuma solicitação${panelFilter==='nova'?' nova':''}</div></div>`
     return
   }
+  const nowMs = Date.now()
   el.innerHTML = list.map(r=>{
     const vs = getReqVisualStatus(r)
+    // SLA badge
+    let slaClass = '', slaTag = ''
+    if(SLA_ACTIVE_STATUSES.has(vs) && r.tipo && TIPO_SLA[r.tipo]){
+      const cfg = TIPO_SLA[r.tipo]
+      const elapsed = nowMs - (r.statusChangedAt || r.createdAt || 0)
+      if(elapsed >= cfg.slaMs){ slaClass=' sla-breach'; slaTag=`<span style="font-size:10px;color:var(--danger);font-weight:700">🔴 SLA ESTOURADO</span>` }
+      else if(elapsed >= cfg.alertMs){ slaClass=' sla-warn'; slaTag=`<span style="font-size:10px;color:#f59e0b;font-weight:700">⚠️ ${Math.floor(elapsed/60000)}min</span>` }
+    }
     return `
-    <div class="req-card ${vs}" onclick="openReqModal('${curPanelToken}','${r.id}')">
+    <div class="req-card ${vs}${slaClass}" onclick="openReqModal('${curPanelToken}','${r.id}')">
       <div class="req-top">
         <div class="req-title">${esc(r.title)}</div>
-        <span class="pill pill-${vs}">${statusLabel(vs)}</span>
+        <span class="pill pill-${vs}">${STATUS_LABELS[vs]||vs}</span>
       </div>
       ${r.description?`<div class="req-desc">${esc(r.description)}</div>`:''}
       <div class="req-meta-row">
+        ${r.tipo&&TIPO_LABELS[r.tipo]?`<span class="req-chip">${TIPO_LABELS[r.tipo]}</span>`:''}
         ${r.priority?`<span class="req-chip ${r.priority}">${prioLabel(r.priority)}</span>`:''}
+        ${slaTag}
         ${r.dueDate?`<span class="req-chip">📅 ${fmtDateFull(r.dueDate)}${r.dueTime?' · '+r.dueTime:''}</span>`:''}
       </div>
     </div>`}).join('')
@@ -1808,22 +1961,68 @@ function renderPanelRequests(){
 
 /* ── REQUEST REVIEW MODAL ── */
 function openReqModal(token, reqId){
-  curReviewToken = token
-  curReviewId = reqId
+  curReviewToken  = token
+  curReviewId     = reqId
   const reqs = allRequests[token] || {}
   const r = reqs[reqId]; if(!r) return
-  curReviewPrio = r.priority || null
+  curReviewPrio   = r.priority || null
+  curReviewStatus = r.status   || 'em_pedido'
+  curReviewTipo   = r.tipo     || null
 
   const contact = contacts.find(c=>c.token===token)
   const contactName = contact ? contact.name : 'Contato'
-  const statusLabel = s => ({nova:'Nova',pendente:'Pendente',atrasada:'Atrasada',concluida:'Concluída'}[s]||s)
-  const isOverdue = r.dueDate && r.dueDate < todayStr()
+
+  // SLA elapsed info
+  let slaInfo = ''
+  if(SLA_ACTIVE_STATUSES.has(curReviewStatus) && curReviewTipo && TIPO_SLA[curReviewTipo]){
+    const cfg = TIPO_SLA[curReviewTipo]
+    const elapsed = Date.now() - (r.statusChangedAt || r.createdAt || 0)
+    const elMin = Math.floor(elapsed/60000)
+    const slaMin = cfg.slaMs/60000
+    const color = elapsed >= cfg.slaMs ? 'var(--danger)' : elapsed >= cfg.alertMs ? '#f59e0b' : 'var(--success)'
+    slaInfo = `<div style="margin-bottom:12px;padding:8px 12px;border-radius:var(--r);background:var(--surface-2);font-size:12px;color:${color};font-weight:700">
+      ⏱️ Neste status há <strong>${elMin} min</strong> — SLA: ${slaMin} min (${elapsed>=cfg.slaMs?'ESTOURADO':elapsed>=cfg.alertMs?'ALERTA':'OK'})
+    </div>`
+  }
+
+  // Status history
+  let historyHtml = ''
+  if(r.statusHistory && r.statusHistory.length > 1){
+    const entries = r.statusHistory.slice(-5).reverse()
+    historyHtml = `<div class="fg"><label class="fl">Histórico de Status</label>
+      <div style="font-size:11px;color:var(--text-muted);line-height:1.8">${
+        entries.map(h=>`<div>• <strong>${STATUS_LABELS[h.status]||h.status}</strong> — ${new Date(h.changedAt).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</div>`).join('')
+      }</div></div>`
+  }
+
+  const pipelineOrder = ['em_pedido','pedido_pronto','em_coleta','validar_alteracao','alterar_pedido','coletado','em_expedicao','concluida']
+  const pipelineNames = {em_pedido:'Em Pedido',pedido_pronto:'Pedido Pronto',em_coleta:'Em Coleta',validar_alteracao:'Validar Alt.',alterar_pedido:'Alterar Ped.',coletado:'Coletado',em_expedicao:'Em Expedição',concluida:'Concluída'}
 
   document.getElementById('reqModContent').innerHTML = `
     <div style="margin-bottom:14px">
       <div style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px">De: ${esc(contactName)}</div>
       <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:${r.description?'8px':'0'}">${esc(r.title)}</div>
       ${r.description?`<div style="font-size:14px;color:var(--text-2);line-height:1.6">${esc(r.description)}</div>`:''}
+    </div>
+
+    ${slaInfo}
+
+    <div class="fg">
+      <label class="fl">Tipo do Pedido</label>
+      <div class="tipo-row" id="reqTipoRow">
+        <button class="tipo-btn${curReviewTipo==='urg1_retira'?' on':''}" onclick="setReqTipo('urg1_retira',this)">🚀 Ret. Urg.1</button>
+        <button class="tipo-btn${curReviewTipo==='nao_em_loja'?' on':''}" onclick="setReqTipo('nao_em_loja',this)">🏪 Não em Loja</button>
+        <button class="tipo-btn${curReviewTipo==='entrega_2h'?' on':''}" onclick="setReqTipo('entrega_2h',this)">⚡ Entrega 2h</button>
+        <button class="tipo-btn${curReviewTipo==='entrega_dia'?' on':''}" onclick="setReqTipo('entrega_dia',this)">📦 Entrega Dia</button>
+        <button class="tipo-btn${curReviewTipo==='entrega_outro_dia'?' on':''}" onclick="setReqTipo('entrega_outro_dia',this)">🗓️ Outro Dia</button>
+      </div>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Status do Pipeline</label>
+      <div class="pipeline-scroll" id="reqStatusRow">
+        ${pipelineOrder.map(s=>`<button class="pipeline-btn ${s}${curReviewStatus===s?' on':''}" onclick="setReqStatus('${s}',this)">${pipelineNames[s]}</button>`).join('')}
+      </div>
     </div>
 
     <div class="fg">
@@ -1848,13 +2047,12 @@ function openReqModal(token, reqId){
       <textarea class="fta" id="reqNote" style="min-height:70px" placeholder="Mensagem para o solicitante…">${esc(r.ownerNote||'')}</textarea>
     </div>
 
+    ${historyHtml}
+
     <div class="m-actions" style="margin-top:0">
       <button class="btn-cancel" onclick="close1('reqMod')">Fechar</button>
       <button class="btn-save" onclick="saveReq()">💾 Salvar</button>
     </div>
-    <button onclick="toggleReqDone('${token}','${reqId}')" style="width:100%;margin-top:8px;padding:11px;border-radius:var(--r);border:1px solid ${r.status==='concluida'?'var(--success)':'var(--border)'};background:${r.status==='concluida'?'var(--success-dim)':'transparent'};color:${r.status==='concluida'?'var(--success)':'var(--text-muted)'};font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
-      ${r.status==='concluida'?'↩️ Reabrir solicitação':'✅ Marcar como concluída'}
-    </button>
     <div style="text-align:center;margin-top:10px">
       <button onclick="deleteReq('${token}','${reqId}')" style="background:none;border:none;color:var(--danger);font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline">Excluir solicitação</button>
     </div>`
@@ -1867,13 +2065,25 @@ function setReqPrio(p, btn){
   document.querySelectorAll('#reqPrioRow .prio-b').forEach(b=>b.classList.remove('on'))
   btn.classList.add('on')
 }
+function setReqStatus(s, btn){
+  curReviewStatus = s
+  document.querySelectorAll('#reqStatusRow .pipeline-btn').forEach(b=>b.classList.remove('on'))
+  btn.classList.add('on')
+}
+function setReqTipo(t, btn){
+  curReviewTipo = t
+  document.querySelectorAll('#reqTipoRow .tipo-btn').forEach(b=>b.classList.remove('on'))
+  btn.classList.add('on')
+}
 
 function toggleReqDone(token, reqId){
   if(!fbDb) return
   const cur = (allRequests[token]||{})[reqId]
-  const newStatus = (cur && cur.status === 'concluida') ? 'pendente' : 'concluida'
-  const updates = { status: newStatus }
-  // If marking done, also sync task completion
+  const newStatus = (cur && cur.status === 'concluida') ? 'em_pedido' : 'concluida'
+  const nowMs = Date.now()
+  const statusHistory = cur.statusHistory || []
+  statusHistory.push({ status: newStatus, changedAt: nowMs })
+  const updates = { status: newStatus, statusHistory, statusChangedAt: nowMs }
   if(newStatus === 'concluida'){
     const t = tasks.find(t=>t.reqId===reqId)
     if(t){ t.completed = true; S.set('mem_tasks',tasks); if(window.AndroidBridge) try{AndroidBridge.saveTasks(JSON.stringify(tasks))}catch(e){} renderTasks(); renderCal() }
@@ -1893,16 +2103,32 @@ function saveReq(){
   const dt = document.getElementById('reqDueTime').value
   const cur = (allRequests[curReviewToken]||{})[curReviewId]
 
-  // Status: nova → pendente when saving; keep other statuses
-  let newStatus = 'pendente'
-  if(cur && cur.status === 'concluida') newStatus = 'concluida'
+  const newStatus = curReviewStatus || 'em_pedido'
+  const prevStatus = cur ? (cur.status || 'em_pedido') : 'em_pedido'
+  const nowMs = Date.now()
+
+  // Track statusChangedAt when status actually changes
+  let statusChangedAt = cur ? (cur.statusChangedAt || cur.createdAt || nowMs) : nowMs
+  let statusHistory = cur ? (cur.statusHistory || []) : []
+  if(newStatus !== prevStatus){
+    statusChangedAt = nowMs
+    statusHistory = [...statusHistory, { status: newStatus, changedAt: nowMs }]
+    // Reset SLA notification so it fires fresh for this new status entry
+    const slaKey = 'sla_' + curReviewId
+    delete notifTs[slaKey]
+    S.set('mem_notif_ts', notifTs)
+    if(window.AndroidBridge) try{ AndroidBridge.saveNotifTs(JSON.stringify(notifTs)) }catch(e){}
+  }
 
   const updates = {
     priority: curReviewPrio || null,
+    tipo: curReviewTipo || null,
     ownerNote: note || null,
     dueDate: dd || null,
     dueTime: dt || null,
-    status: newStatus
+    status: newStatus,
+    statusChangedAt,
+    statusHistory
   }
 
   fbDb.ref('requests/'+curReviewToken+'/'+curReviewId).update(updates)
@@ -2097,6 +2323,148 @@ function checkNotifs(){
   }
 }
 
+/* ── REQUEST SLA NOTIFICATIONS ── */
+function checkReqNotifs(){
+  const nowMs = Date.now()
+  const hasAndroid = !!window.AndroidBridge
+  const hasWeb = typeof Notification!=='undefined' && Notification.permission==='granted'
+  if(!hasAndroid && !hasWeb) return
+
+  let changed = false
+  let alertCount = 0
+
+  Object.entries(allRequests).forEach(([token, reqs])=>{
+    if(!reqs) return
+    Object.entries(reqs).forEach(([reqId, r])=>{
+      if(!r) return
+      const s = r.status || 'em_pedido'
+      if(!SLA_ACTIVE_STATUSES.has(s)) return         // only pipeline statuses
+      if(!r.tipo || !TIPO_SLA[r.tipo]) return         // only typed orders
+      const cfg = TIPO_SLA[r.tipo]
+      if(!cfg) return                                  // entrega_outro_dia = sem SLA
+
+      const changedAt  = r.statusChangedAt || r.createdAt || 0
+      const elapsed    = nowMs - changedAt
+      const slaKey     = 'sla_' + reqId
+      const lastFired  = notifTs[slaKey] || 0
+
+      // Fire once per status-entry (lastFired < changedAt = haven't fired yet for this entry)
+      // Alert threshold
+      if(elapsed >= cfg.alertMs && lastFired < changedAt){
+        const elMin   = Math.floor(elapsed/60000)
+        const slaMin  = cfg.slaMs/60000
+        const tipo    = TIPO_LABELS[r.tipo] || r.tipo
+        const status  = STATUS_LABELS[s] || s
+        const timeStr = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
+        const isBreach = elapsed >= cfg.slaMs
+        const icon = isBreach ? '🔴' : '⚠️'
+        sendNotif(
+          `${icon} ${timeStr} — ${isBreach ? 'SLA Estourado!' : 'Pedido Parado'}`,
+          `"${r.title}" — ${status} há ${elMin} min (${tipo}, SLA: ${slaMin}min)`
+        )
+        notifTs[slaKey] = changedAt  // mark as fired for this status entry
+        changed = true
+        alertCount++
+      }
+    })
+  })
+
+  if(changed){
+    S.set('mem_notif_ts', notifTs)
+    if(window.AndroidBridge) try{ AndroidBridge.saveNotifTs(JSON.stringify(notifTs)) }catch(e){}
+  }
+
+  // Update gerencial badge
+  const pip = document.getElementById('gerPip')
+  if(pip) pip.style.display = alertCount > 0 ? 'block' : 'none'
+}
+
+/* ── GERENCIAL TAB ── */
+function renderGerencial(){
+  const el = document.getElementById('gerList')
+  if(!el) return
+  const nowMs = Date.now()
+
+  // Collect all pipeline orders
+  const items = []
+  Object.entries(allRequests).forEach(([token, reqs])=>{
+    if(!reqs) return
+    const contact = contacts.find(c=>c.token===token)
+    const contactName = contact ? contact.name : token
+    Object.entries(reqs).forEach(([reqId, r])=>{
+      const s = r.status || 'em_pedido'
+      if(s === 'concluida') return  // skip done orders
+      if(!PIPELINE_STATUSES.includes(s)) return
+      items.push({...r, id:reqId, token, contactName})
+    })
+  })
+
+  if(!items.length){
+    el.innerHTML = `<div class="ger-empty">✅ Nenhum pedido ativo no pipeline</div>`
+    return
+  }
+
+  // Sort: breach first, then warn, then ok
+  const getSlaState = r => {
+    const s = r.status || 'em_pedido'
+    if(!SLA_ACTIVE_STATUSES.has(s) || !r.tipo || !TIPO_SLA[r.tipo]) return 'ok'
+    const cfg = TIPO_SLA[r.tipo]
+    if(!cfg) return 'ok'
+    const elapsed = nowMs - (r.statusChangedAt || r.createdAt || 0)
+    if(elapsed >= cfg.slaMs) return 'breach'
+    if(elapsed >= cfg.alertMs) return 'warn'
+    return 'ok'
+  }
+  const stateOrder = {breach:0, warn:1, ok:2}
+  items.sort((a,b)=> stateOrder[getSlaState(a)] - stateOrder[getSlaState(b)])
+
+  // Group by state
+  const breach = items.filter(r=>getSlaState(r)==='breach')
+  const warn   = items.filter(r=>getSlaState(r)==='warn')
+  const ok     = items.filter(r=>getSlaState(r)==='ok')
+
+  const renderCard = r => {
+    const s = r.status || 'em_pedido'
+    const slaState = getSlaState(r)
+    const elapsed  = nowMs - (r.statusChangedAt || r.createdAt || 0)
+    const elMin    = Math.floor(elapsed/60000)
+    const cfg      = (r.tipo && TIPO_SLA[r.tipo]) || null
+    const slaMin   = cfg ? cfg.slaMs/60000 : null
+    const pct      = cfg ? Math.min(100, (elapsed/cfg.slaMs)*100) : 0
+    const fillColor = slaState==='breach' ? 'var(--danger)' : slaState==='warn' ? '#f59e0b' : 'var(--success)'
+
+    // Check when SLA notification was fired
+    const slaKey   = 'sla_' + r.id
+    const firedAt  = notifTs[slaKey]
+    const firedStr = firedAt ? `Notificado às ${new Date(firedAt > 1e12 ? firedAt : r.statusChangedAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}` : ''
+
+    return `<div class="ger-card ${slaState}" onclick="openReqModal('${r.token}','${r.id}')">
+      <div class="ger-row">
+        <div class="ger-name">${esc(r.title)}</div>
+        <div class="ger-time ${slaState}">${elMin}min</div>
+      </div>
+      <div class="ger-meta">
+        <strong>${STATUS_LABELS[s]||s}</strong> · ${r.contactName}
+        ${r.tipo ? ` · ${TIPO_LABELS[r.tipo]||r.tipo}` : ''}
+        ${slaMin ? ` · SLA ${slaMin}min` : ''}
+      </div>
+      ${firedStr ? `<div class="ger-notif-time">🔔 ${firedStr}</div>` : ''}
+      ${cfg ? `<div class="ger-sla-bar"><div class="ger-sla-fill" style="width:${pct}%;background:${fillColor}"></div></div>` : ''}
+    </div>`
+  }
+
+  const section = (title, list) => list.length ? `
+    <div class="ger-section">
+      <div class="ger-section-title">${title} (${list.length})</div>
+      ${list.map(renderCard).join('')}
+    </div>` : ''
+
+  el.innerHTML =
+    section('🔴 SLA Estourado', breach) +
+    section('⚠️ Em Alerta', warn) +
+    section('✅ Dentro do SLA', ok)
+}
+
 /* ── TOAST ── */
 function toast(msg){
   const c=document.getElementById('toasts')
@@ -2132,10 +2500,10 @@ function saveFcmToken(token){
 subscribeAllContacts()
 
 // Run once immediately on startup, then every 30s
-setTimeout(checkNotifs, 1500)
-setInterval(()=>{ checkNotifs(); renderTasks(); updateNotifUI() }, 30000)
+setTimeout(()=>{ checkNotifs(); checkReqNotifs() }, 1500)
+setInterval(()=>{ checkNotifs(); checkReqNotifs(); renderTasks(); updateNotifUI() }, 30000)
 // Also check when user returns to the tab/app
 document.addEventListener('visibilitychange',()=>{
-  if(document.visibilityState==='visible'){ checkNotifs(); updateNotifUI() }
+  if(document.visibilityState==='visible'){ checkNotifs(); checkReqNotifs(); updateNotifUI() }
 })
 </script>
