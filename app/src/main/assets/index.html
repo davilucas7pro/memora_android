@@ -745,27 +745,60 @@ body {
 .pill-sla-warn         { background: #fef3c7; color: #92400e }
 
 /* ── Gerencial tab ── */
+.ger-tabs { display: flex; gap: 0; border-bottom: 1.5px solid var(--border); margin-bottom: 14px; padding: 0 16px }
+.ger-tab-btn {
+  flex: 1; padding: 9px 4px 8px; font-size: 11px; font-weight: 700;
+  color: var(--text-muted); background: none; border: none;
+  border-bottom: 2px solid transparent; margin-bottom: -1.5px;
+  cursor: pointer; font-family: inherit; letter-spacing: .03em; transition: all .15s;
+}
+.ger-tab-btn.on { color: var(--accent-2); border-bottom-color: var(--accent-2) }
 .ger-section { margin-bottom: 20px }
 .ger-section-title { font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--text-muted); padding: 0 16px 8px }
 .ger-empty { text-align: center; padding: 48px 24px; color: var(--text-muted); font-size: 14px }
 .ger-card {
   margin: 0 16px 8px; padding: 12px 14px; border-radius: var(--r);
   background: var(--surface); border: 1px solid var(--border);
-  border-left: 3px solid var(--border-2); cursor: pointer;
+  border-left: 3px solid var(--border-2);
 }
 .ger-card.ok     { border-left-color: var(--success) }
 .ger-card.warn   { border-left-color: #f59e0b; animation: pulse-sla 1.8s ease-in-out infinite }
 .ger-card.breach { border-left-color: var(--danger); animation: pulse-sla 0.9s ease-in-out infinite }
+.ger-card.neutral { border-left-color: var(--info); animation: none }
+.ger-card-clickable { cursor: pointer }
 .ger-row  { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px }
 .ger-name { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; min-width: 0 }
 .ger-time { font-size: 13px; font-weight: 700; flex-shrink: 0 }
 .ger-time.ok     { color: var(--success) }
 .ger-time.warn   { color: #f59e0b }
 .ger-time.breach { color: var(--danger) }
+.ger-time.neutral { color: var(--info) }
 .ger-meta { font-size: 11px; color: var(--text-muted); margin-top: 4px }
 .ger-sla-bar { height: 3px; border-radius: 2px; background: var(--surface-2); margin-top: 8px; overflow: hidden }
 .ger-sla-fill { height: 100%; border-radius: 2px; transition: width .3s }
 .ger-notif-time { font-size: 11px; color: var(--text-muted); margin-top: 3px }
+.ger-obs-wrap { margin-top: 8px }
+.ger-obs-label { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px }
+.ger-obs-ta {
+  width: 100%; box-sizing: border-box; padding: 7px 9px;
+  border: 1.5px solid var(--border); border-radius: var(--r);
+  background: var(--surface-2); color: var(--text);
+  font-family: inherit; font-size: 12px; line-height: 1.4; resize: vertical;
+  min-height: 52px; outline: none; transition: border-color .15s;
+}
+.ger-obs-ta:focus { border-color: var(--accent) }
+.ger-obs-save {
+  margin-top: 5px; padding: 4px 12px; border-radius: 20px;
+  border: 1.5px solid var(--accent); background: var(--accent-dim);
+  color: var(--accent-2); font-size: 11px; font-weight: 700;
+  cursor: pointer; font-family: inherit; transition: all .15s;
+}
+.ger-obs-save:active { opacity: .7 }
+.ger-rank { font-size: 18px; font-weight: 800; color: var(--text-muted); flex-shrink: 0; min-width: 24px }
+.ger-stat-row { display: flex; gap: 10px; margin: 0 16px 14px; flex-wrap: wrap }
+.ger-stat { flex: 1 1 auto; min-width: 0; padding: 10px 14px; border-radius: var(--r); background: var(--surface); border: 1px solid var(--border) }
+.ger-stat-val { font-size: 22px; font-weight: 800; color: var(--text) }
+.ger-stat-lbl { font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); margin-top: 2px }
 
 /* ── Status pipeline selector in modal ── */
 .pipeline-scroll { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none }
@@ -935,6 +968,12 @@ body {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="13" height="13"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
           Atualizar
         </button>
+      </div>
+      <div class="ger-tabs">
+        <button class="ger-tab-btn on" id="gTab-alertas"   onclick="goGerTab('alertas')">🔔 Alertas</button>
+        <button class="ger-tab-btn"   id="gTab-parados"   onclick="goGerTab('parados')">⏸ Parados</button>
+        <button class="ger-tab-btn"   id="gTab-separacao" onclick="goGerTab('separacao')">✂️ Separação</button>
+        <button class="ger-tab-btn"   id="gTab-sku"       onclick="goGerTab('sku')">🔍 SKU</button>
       </div>
       <div id="gerList" style="padding-bottom:40px"></div>
     </div>
@@ -2324,6 +2363,46 @@ function checkNotifs(){
   }
 }
 
+/* ── SLA ALERT RECORDS ── */
+let slaAlerts = S.get('mem_sla_alerts', [])
+let curGerTab = 'alertas'
+
+function saveSlaAlert(reqId, token, r, elapsed, isBreach){
+  const alertId = `${Date.now()}_${reqId}`
+  const s = r.status || 'em_pedido'
+  const contact = contacts.find(c=>c.token===token)
+  const contactName = contact ? contact.name : token
+  slaAlerts.unshift({
+    id: alertId,
+    reqId,
+    token,
+    reqTitle: r.title || reqId,
+    contactName,
+    tipo: r.tipo || '',
+    status: s,
+    changedAt: r.statusChangedAt || r.createdAt || 0,
+    firedAt: Date.now(),
+    elapsedMs: elapsed,
+    isBreach,
+    obs: ''
+  })
+  if(slaAlerts.length > 100) slaAlerts = slaAlerts.slice(0, 100)
+  S.set('mem_sla_alerts', slaAlerts)
+}
+
+function saveAlertObs(alertId, obs){
+  const rec = slaAlerts.find(a=>a.id===alertId)
+  if(rec){ rec.obs = obs; S.set('mem_sla_alerts', slaAlerts) }
+}
+
+function goGerTab(tab){
+  curGerTab = tab
+  document.querySelectorAll('.ger-tab-btn').forEach(b=>b.classList.remove('on'))
+  const btn = document.getElementById('gTab-'+tab)
+  if(btn) btn.classList.add('on')
+  renderGerencial()
+}
+
 /* ── REQUEST SLA NOTIFICATIONS ── */
 function checkReqNotifs(){
   const nowMs = Date.now()
@@ -2339,31 +2418,30 @@ function checkReqNotifs(){
     Object.entries(reqs).forEach(([reqId, r])=>{
       if(!r) return
       const s = r.status || 'em_pedido'
-      if(!SLA_ACTIVE_STATUSES.has(s)) return         // only pipeline statuses
-      if(!r.tipo || !TIPO_SLA[r.tipo]) return         // only typed orders
+      if(!SLA_ACTIVE_STATUSES.has(s)) return
+      if(!r.tipo || !TIPO_SLA[r.tipo]) return
       const cfg = TIPO_SLA[r.tipo]
-      if(!cfg) return                                  // entrega_outro_dia = sem SLA
+      if(!cfg) return
 
       const changedAt  = r.statusChangedAt || r.createdAt || 0
       const elapsed    = nowMs - changedAt
       const slaKey     = 'sla_' + reqId
       const lastFired  = notifTs[slaKey] || 0
 
-      // Fire once per status-entry (lastFired < changedAt = haven't fired yet for this entry)
-      // Alert threshold
       if(elapsed >= cfg.alertMs && lastFired < changedAt){
-        const elMin   = Math.floor(elapsed/60000)
-        const slaMin  = cfg.slaMs/60000
-        const tipo    = TIPO_LABELS[r.tipo] || r.tipo
-        const status  = STATUS_LABELS[s] || s
-        const timeStr = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
+        const elMin    = Math.floor(elapsed/60000)
+        const slaMin   = cfg.slaMs/60000
+        const tipo     = TIPO_LABELS[r.tipo] || r.tipo
+        const status   = STATUS_LABELS[s] || s
+        const timeStr  = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
         const isBreach = elapsed >= cfg.slaMs
-        const icon = isBreach ? '🔴' : '⚠️'
+        const icon     = isBreach ? '🔴' : '⚠️'
         sendNotif(
           `${icon} ${timeStr} — ${isBreach ? 'SLA Estourado!' : 'Pedido Parado'}`,
           `"${r.title}" — ${status} há ${elMin} min (${tipo}, SLA: ${slaMin}min)`
         )
-        notifTs[slaKey] = changedAt  // mark as fired for this status entry
+        saveSlaAlert(reqId, token, r, elapsed, isBreach)
+        notifTs[slaKey] = changedAt
         changed = true
         alertCount++
       }
@@ -2375,7 +2453,6 @@ function checkReqNotifs(){
     if(window.AndroidBridge) try{ AndroidBridge.saveNotifTs(JSON.stringify(notifTs)) }catch(e){}
   }
 
-  // Update gerencial badge
   const pip = document.getElementById('gerPip')
   if(pip) pip.style.display = alertCount > 0 ? 'block' : 'none'
 }
@@ -2384,86 +2461,235 @@ function checkReqNotifs(){
 function renderGerencial(){
   const el = document.getElementById('gerList')
   if(!el) return
-  const nowMs = Date.now()
+  if(curGerTab === 'alertas')   renderGerAlertas(el)
+  else if(curGerTab === 'parados')   renderGerParados(el)
+  else if(curGerTab === 'separacao') renderGerSeparacao(el)
+  else if(curGerTab === 'sku')       renderGerSku(el)
+}
 
-  // Collect all pipeline orders
+/* ── GERENCIAL: ALERTAS ── */
+function renderGerAlertas(el){
+  if(!slaAlerts.length){
+    el.innerHTML = `<div class="ger-empty">🔔 Nenhum alerta SLA registrado ainda</div>`
+    return
+  }
+  const fmt = ms => {
+    const m = Math.floor(ms/60000), s = Math.floor((ms%60000)/1000)
+    return m > 0 ? `${m}min ${s}s` : `${s}s`
+  }
+  const cards = slaAlerts.map(a => {
+    const cls   = a.isBreach ? 'breach' : 'warn'
+    const icon  = a.isBreach ? '🔴' : '⚠️'
+    const timeStr = new Date(a.firedAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
+    const dateStr = new Date(a.firedAt).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})
+    const slaMin  = (a.tipo && TIPO_SLA[a.tipo]) ? TIPO_SLA[a.tipo].slaMs/60000 : null
+    const safeId  = a.id.replace(/['"]/g,'')
+    return `<div class="ger-card ${cls}">
+      <div class="ger-row">
+        <div class="ger-name">${icon} ${esc(a.reqTitle)}</div>
+        <div class="ger-time ${cls}">${fmt(a.elapsedMs)}</div>
+      </div>
+      <div class="ger-meta">
+        <strong>${STATUS_LABELS[a.status]||a.status}</strong> · ${esc(a.contactName)}
+        ${a.tipo ? ` · ${TIPO_LABELS[a.tipo]||a.tipo}` : ''}
+        ${slaMin ? ` · SLA ${slaMin}min` : ''}
+      </div>
+      <div class="ger-notif-time">🔔 Notificado em ${dateStr} às ${timeStr}</div>
+      <div class="ger-obs-wrap">
+        <div class="ger-obs-label">Observação / Justificativa</div>
+        <textarea class="ger-obs-ta" id="obs-${safeId}" rows="2" placeholder="Ex: separador estava ocupado em outro pedido…">${esc(a.obs||'')}</textarea>
+        <button class="ger-obs-save" onclick="saveAlertObs('${safeId}',document.getElementById('obs-${safeId}').value);toast('Observação salva')">Salvar obs.</button>
+      </div>
+    </div>`
+  }).join('')
+  const total   = slaAlerts.length
+  const nBreach = slaAlerts.filter(a=>a.isBreach).length
+  const nWarn   = total - nBreach
+  el.innerHTML = `
+    <div class="ger-stat-row">
+      <div class="ger-stat"><div class="ger-stat-val" style="color:var(--danger)">${nBreach}</div><div class="ger-stat-lbl">SLA Estourado</div></div>
+      <div class="ger-stat"><div class="ger-stat-val" style="color:#f59e0b">${nWarn}</div><div class="ger-stat-lbl">Em Alerta</div></div>
+      <div class="ger-stat"><div class="ger-stat-val">${total}</div><div class="ger-stat-lbl">Total Registros</div></div>
+    </div>
+    <div class="ger-section">
+      <div class="ger-section-title">Registros de Alerta (${total})</div>
+      ${cards}
+    </div>`
+}
+
+/* ── GERENCIAL: PARADOS ── */
+function renderGerParados(el){
+  const nowMs = Date.now()
   const items = []
   Object.entries(allRequests).forEach(([token, reqs])=>{
     if(!reqs) return
     const contact = contacts.find(c=>c.token===token)
     const contactName = contact ? contact.name : token
     Object.entries(reqs).forEach(([reqId, r])=>{
+      if(!r) return
       const s = r.status || 'em_pedido'
-      if(s === 'concluida') return  // skip done orders
-      if(!PIPELINE_STATUSES.includes(s)) return
-      items.push({...r, id:reqId, token, contactName})
+      if(s === 'concluida') return
+      if(!SLA_ACTIVE_STATUSES.has(s)) return
+      const changedAt = r.statusChangedAt || r.createdAt || 0
+      const elapsed   = nowMs - changedAt
+      const cfg       = (r.tipo && TIPO_SLA[r.tipo]) || null
+      const slaState  = !cfg ? 'ok' : elapsed >= cfg.slaMs ? 'breach' : elapsed >= cfg.alertMs ? 'warn' : 'ok'
+      items.push({...r, id:reqId, token, contactName, elapsed, slaState, cfg})
     })
   })
+  items.sort((a,b)=>b.elapsed-a.elapsed)
 
   if(!items.length){
-    el.innerHTML = `<div class="ger-empty">✅ Nenhum pedido ativo no pipeline</div>`
+    el.innerHTML = `<div class="ger-empty">✅ Nenhum pedido parado no pipeline</div>`
     return
   }
-
-  // Sort: breach first, then warn, then ok
-  const getSlaState = r => {
-    const s = r.status || 'em_pedido'
-    if(!SLA_ACTIVE_STATUSES.has(s) || !r.tipo || !TIPO_SLA[r.tipo]) return 'ok'
-    const cfg = TIPO_SLA[r.tipo]
-    if(!cfg) return 'ok'
-    const elapsed = nowMs - (r.statusChangedAt || r.createdAt || 0)
-    if(elapsed >= cfg.slaMs) return 'breach'
-    if(elapsed >= cfg.alertMs) return 'warn'
-    return 'ok'
-  }
-  const stateOrder = {breach:0, warn:1, ok:2}
-  items.sort((a,b)=> stateOrder[getSlaState(a)] - stateOrder[getSlaState(b)])
-
-  // Group by state
-  const breach = items.filter(r=>getSlaState(r)==='breach')
-  const warn   = items.filter(r=>getSlaState(r)==='warn')
-  const ok     = items.filter(r=>getSlaState(r)==='ok')
-
-  const renderCard = r => {
-    const s = r.status || 'em_pedido'
-    const slaState = getSlaState(r)
-    const elapsed  = nowMs - (r.statusChangedAt || r.createdAt || 0)
-    const elMin    = Math.floor(elapsed/60000)
-    const cfg      = (r.tipo && TIPO_SLA[r.tipo]) || null
-    const slaMin   = cfg ? cfg.slaMs/60000 : null
-    const pct      = cfg ? Math.min(100, (elapsed/cfg.slaMs)*100) : 0
-    const fillColor = slaState==='breach' ? 'var(--danger)' : slaState==='warn' ? '#f59e0b' : 'var(--success)'
-
-    // Check when SLA notification was fired
-    const slaKey   = 'sla_' + r.id
-    const firedAt  = notifTs[slaKey]
-    const firedStr = firedAt ? `Notificado às ${new Date(firedAt > 1e12 ? firedAt : r.statusChangedAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}` : ''
-
-    return `<div class="ger-card ${slaState}" onclick="openReqModal('${r.token}','${r.id}')">
+  const fmt = ms => { const m=Math.floor(ms/60000); return m+'min' }
+  const cards = items.map((r,i)=>{
+    const s = r.status||'em_pedido'
+    const fillColor = r.slaState==='breach'?'var(--danger)':r.slaState==='warn'?'#f59e0b':'var(--success)'
+    const pct = r.cfg ? Math.min(100,(r.elapsed/r.cfg.slaMs)*100) : 0
+    return `<div class="ger-card ${r.slaState} ger-card-clickable" onclick="openReqModal('${r.token}','${r.id}')">
       <div class="ger-row">
-        <div class="ger-name">${esc(r.title)}</div>
-        <div class="ger-time ${slaState}">${elMin}min</div>
+        <div class="ger-rank">#${i+1}</div>
+        <div class="ger-name" style="margin-left:6px">${esc(r.title)}</div>
+        <div class="ger-time ${r.slaState}">${fmt(r.elapsed)}</div>
       </div>
       <div class="ger-meta">
-        <strong>${STATUS_LABELS[s]||s}</strong> · ${r.contactName}
+        <strong>${STATUS_LABELS[s]||s}</strong> · ${esc(r.contactName)}
         ${r.tipo ? ` · ${TIPO_LABELS[r.tipo]||r.tipo}` : ''}
-        ${slaMin ? ` · SLA ${slaMin}min` : ''}
+        ${r.cfg ? ` · SLA ${r.cfg.slaMs/60000}min` : ''}
       </div>
-      ${firedStr ? `<div class="ger-notif-time">🔔 ${firedStr}</div>` : ''}
-      ${cfg ? `<div class="ger-sla-bar"><div class="ger-sla-fill" style="width:${pct}%;background:${fillColor}"></div></div>` : ''}
+      ${r.cfg ? `<div class="ger-sla-bar"><div class="ger-sla-fill" style="width:${pct}%;background:${fillColor}"></div></div>` : ''}
     </div>`
+  }).join('')
+  el.innerHTML = `<div class="ger-section"><div class="ger-section-title">Pedidos mais parados (${items.length})</div>${cards}</div>`
+}
+
+/* ── GERENCIAL: SEPARAÇÃO ── */
+function renderGerSeparacao(el){
+  // Time spent in em_coleta, from statusHistory
+  const items = []
+  Object.entries(allRequests).forEach(([token, reqs])=>{
+    if(!reqs) return
+    const contact = contacts.find(c=>c.token===token)
+    const contactName = contact ? contact.name : token
+    Object.entries(reqs).forEach(([reqId, r])=>{
+      if(!r) return
+      if(!r.statusHistory) return
+      let colMs = 0
+      const hist = Array.isArray(r.statusHistory) ? r.statusHistory : []
+      for(let i=0;i<hist.length;i++){
+        if(hist[i].status==='em_coleta'){
+          const start = hist[i].changedAt || 0
+          const end   = hist[i+1] ? (hist[i+1].changedAt||Date.now()) : Date.now()
+          colMs += end - start
+        }
+      }
+      // Also count current status if em_coleta
+      if((r.status||'') === 'em_coleta'){
+        const start = r.statusChangedAt || 0
+        if(start) colMs += Date.now() - start
+      }
+      if(colMs > 0) items.push({...r, id:reqId, token, contactName, colMs})
+    })
+  })
+  items.sort((a,b)=>b.colMs-a.colMs)
+
+  if(!items.length){
+    el.innerHTML = `<div class="ger-empty">✂️ Nenhum pedido com tempo de separação registrado</div>`
+    return
   }
+  const fmt = ms => { const m=Math.floor(ms/60000), s=Math.floor((ms%60000)/1000); return m>0?`${m}min`:s+'s' }
+  const avgMs = items.reduce((acc,r)=>acc+r.colMs,0)/items.length
+  const maxMs = items[0].colMs
 
-  const section = (title, list) => list.length ? `
-    <div class="ger-section">
-      <div class="ger-section-title">${title} (${list.length})</div>
-      ${list.map(renderCard).join('')}
-    </div>` : ''
+  const cards = items.map((r,i)=>{
+    const pct = Math.min(100,(r.colMs/maxMs)*100)
+    return `<div class="ger-card neutral ger-card-clickable" onclick="openReqModal('${r.token}','${r.id}')">
+      <div class="ger-row">
+        <div class="ger-rank">#${i+1}</div>
+        <div class="ger-name" style="margin-left:6px">${esc(r.title)}</div>
+        <div class="ger-time neutral">${fmt(r.colMs)}</div>
+      </div>
+      <div class="ger-meta">${esc(r.contactName)}${r.tipo?` · ${TIPO_LABELS[r.tipo]||r.tipo}`:''}</div>
+      <div class="ger-sla-bar"><div class="ger-sla-fill" style="width:${pct}%;background:var(--info)"></div></div>
+    </div>`
+  }).join('')
 
-  el.innerHTML =
-    section('🔴 SLA Estourado', breach) +
-    section('⚠️ Em Alerta', warn) +
-    section('✅ Dentro do SLA', ok)
+  el.innerHTML = `
+    <div class="ger-stat-row">
+      <div class="ger-stat"><div class="ger-stat-val" style="color:var(--info)">${fmt(maxMs)}</div><div class="ger-stat-lbl">Maior tempo</div></div>
+      <div class="ger-stat"><div class="ger-stat-val">${fmt(Math.round(avgMs))}</div><div class="ger-stat-lbl">Média</div></div>
+      <div class="ger-stat"><div class="ger-stat-val">${items.length}</div><div class="ger-stat-lbl">Pedidos</div></div>
+    </div>
+    <div class="ger-section"><div class="ger-section-title">Tempo em Separação (em_coleta)</div>${cards}</div>`
+}
+
+/* ── GERENCIAL: VELOCIDADE SKU ── */
+function renderGerSku(el){
+  // Time spent in validar_alteracao + alterar_pedido (deviation statuses)
+  const items = []
+  Object.entries(allRequests).forEach(([token, reqs])=>{
+    if(!reqs) return
+    const contact = contacts.find(c=>c.token===token)
+    const contactName = contact ? contact.name : token
+    Object.entries(reqs).forEach(([reqId, r])=>{
+      if(!r) return
+      const deviationStatuses = new Set(['validar_alteracao','alterar_pedido'])
+      let devMs    = 0
+      let devCount = 0
+      const hist = Array.isArray(r.statusHistory) ? r.statusHistory : []
+      for(let i=0;i<hist.length;i++){
+        if(deviationStatuses.has(hist[i].status)){
+          const start = hist[i].changedAt||0
+          const end   = hist[i+1]?(hist[i+1].changedAt||Date.now()):Date.now()
+          devMs += end - start
+          devCount++
+        }
+      }
+      if(deviationStatuses.has(r.status||'')){
+        const start = r.statusChangedAt||0
+        if(start){ devMs += Date.now()-start; devCount++ }
+      }
+      if(devMs > 0) items.push({...r, id:reqId, token, contactName, devMs, devCount})
+    })
+  })
+  items.sort((a,b)=>b.devMs-a.devMs)
+
+  if(!items.length){
+    el.innerHTML = `<div class="ger-empty">🔍 Nenhum pedido com desvio de SKU registrado</div>`
+    return
+  }
+  const fmt = ms => { const m=Math.floor(ms/60000), s=Math.floor((ms%60000)/1000); return m>0?`${m}min`:s+'s' }
+  const avgMs = items.reduce((acc,r)=>acc+r.devMs,0)/items.length
+  const maxMs = items[0].devMs
+  const totalDev = items.reduce((acc,r)=>acc+r.devCount,0)
+
+  const cards = items.map((r,i)=>{
+    const pct = Math.min(100,(r.devMs/maxMs)*100)
+    const s = r.status||'em_pedido'
+    return `<div class="ger-card neutral ger-card-clickable" onclick="openReqModal('${r.token}','${r.id}')">
+      <div class="ger-row">
+        <div class="ger-rank">#${i+1}</div>
+        <div class="ger-name" style="margin-left:6px">${esc(r.title)}</div>
+        <div class="ger-time neutral">${fmt(r.devMs)}</div>
+      </div>
+      <div class="ger-meta">
+        ${esc(r.contactName)}${r.tipo?` · ${TIPO_LABELS[r.tipo]||r.tipo}`:''}
+        · <strong>${r.devCount}x desvio</strong>
+        · status atual: ${STATUS_LABELS[s]||s}
+      </div>
+      <div class="ger-sla-bar"><div class="ger-sla-fill" style="width:${pct}%;background:var(--purple)"></div></div>
+    </div>`
+  }).join('')
+
+  el.innerHTML = `
+    <div class="ger-stat-row">
+      <div class="ger-stat"><div class="ger-stat-val" style="color:var(--purple)">${fmt(maxMs)}</div><div class="ger-stat-lbl">Maior desvio</div></div>
+      <div class="ger-stat"><div class="ger-stat-val">${fmt(Math.round(avgMs))}</div><div class="ger-stat-lbl">Média</div></div>
+      <div class="ger-stat"><div class="ger-stat-val">${totalDev}</div><div class="ger-stat-lbl">Total desvios</div></div>
+    </div>
+    <div class="ger-section"><div class="ger-section-title">Velocidade de SKU — pedidos com desvio</div>${cards}</div>`
 }
 
 /* ── TOAST ── */
