@@ -1899,11 +1899,12 @@ const TIPO_LABELS = {
   entrega_outro_dia:'🗓️ Outro Dia'
 }
 // SLA: { alertMs, slaMs } — null = sem SLA
+// Retirada: alerta 5min / máx 10min | Entrega: alerta 10min / máx 20min
 const TIPO_SLA = {
-  urg1_retira:    { alertMs:  5*60000, slaMs: 10*60000 },
-  nao_em_loja:    { alertMs:  8*60000, slaMs: 15*60000 },
-  entrega_2h:     { alertMs: 10*60000, slaMs: 20*60000 },
-  entrega_dia:    { alertMs: 20*60000, slaMs: 40*60000 },
+  urg1_retira:      { alertMs:  5*60000, slaMs: 10*60000 },
+  nao_em_loja:      { alertMs:  5*60000, slaMs: 10*60000 },
+  entrega_2h:       { alertMs: 10*60000, slaMs: 20*60000 },
+  entrega_dia:      { alertMs: 10*60000, slaMs: 20*60000 },
   entrega_outro_dia: null
 }
 // Statuses where SLA clock runs

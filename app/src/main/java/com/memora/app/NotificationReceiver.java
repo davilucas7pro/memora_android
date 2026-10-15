@@ -144,12 +144,12 @@ public class NotificationReceiver extends BroadcastReceiver {
     private void checkRequestSla(Context context, String requestsJson, JSONObject notifTs,
                                   int baseNotifId, long nowMs, NotificationManager nm) {
         // SLA thresholds per order type (alertMs, slaMs)
-        // urg1_retira: 5min/10min | nao_em_loja: 8/15 | entrega_2h: 10/20 | entrega_dia: 20/40
+        // Retirada: alerta 5min / máx 10min | Entrega: alerta 10min / máx 20min
         long[][] slaConfig = {
             {  5*60*1000L, 10*60*1000L }, // urg1_retira
-            {  8*60*1000L, 15*60*1000L }, // nao_em_loja
+            {  5*60*1000L, 10*60*1000L }, // nao_em_loja
             { 10*60*1000L, 20*60*1000L }, // entrega_2h
-            { 20*60*1000L, 40*60*1000L }  // entrega_dia
+            { 10*60*1000L, 20*60*1000L }  // entrega_dia
         };
         String[] tipoKeys = { "urg1_retira", "nao_em_loja", "entrega_2h", "entrega_dia" };
         String[] tipoNames = { "Ret. Urg.1", "Não em Loja", "Entrega 2h", "Entrega Dia" };
